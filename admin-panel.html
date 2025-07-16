@@ -22,13 +22,32 @@
     .btn-block {
       margin-bottom: 15px;
     }
+    #logoutBtn {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <div class="panel">
-    <h3 class="mb-4 text-center">🔐 Admin Panel - NST Travels</h3>
+  <!-- 🔐 Login Panel -->
+  <div class="panel" id="loginPanel">
+    <h3 class="mb-4 text-center">🔐 Admin Login</h3>
+    <div class="mb-3">
+      <label class="form-label">Username</label>
+      <input type="text" id="username" class="form-control" />
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Password</label>
+      <input type="password" id="password" class="form-control" />
+    </div>
+    <button class="btn btn-success w-100" onclick="login()">Login</button>
+  </div>
 
-    <!-- Admin Page Shortcuts -->
+  <!-- ✅ Admin Control Panel -->
+  <div class="panel" id="adminPanel" style="display:none">
+    <h3 class="mb-4 text-center">🔧 Admin Panel - NST Travels</h3>
+    <button class="btn btn-outline-danger w-100 mb-3" id="logoutBtn" onclick="logout()">🚪 Logout</button>
+
+    <!-- Admin Pages -->
     <div class="d-grid gap-2">
       <a href="admin-dashboard.html" class="btn btn-primary btn-block">Dashboard</a>
       <a href="attendance.html" class="btn btn-primary btn-block">Attendance</a>
@@ -41,17 +60,15 @@
 
     <hr class="my-4" />
 
-    <!-- Reset Section -->
+    <!-- Reset Options -->
     <h5>🛠 Reset Tools</h5>
-    <button class="btn btn-warning w-100 mb-3" onclick="verifyAndResetId()">🔁 Reset Trip ID to #NST001</button>
-    <button class="btn btn-danger w-100" onclick="verifyAndDeleteAll()">🗑️ Reset All Trip Data</button>
+    <button class="btn btn-warning w-100 mb-3" onclick="resetTripId()">🔁 Reset Trip ID to #NST001</button>
+    <button class="btn btn-danger w-100" onclick="resetAllTrips()">🗑️ Reset All Trip Data</button>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getDatabase, ref, remove, set
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, set, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
@@ -69,33 +86,38 @@
     const ADMIN_USERNAME = "Siva";
     const ADMIN_PASSWORD = "Nst@1007";
 
-    function verifyAdminAccess() {
-      const u = prompt("👤 Enter admin username:");
-      const p = prompt("🔒 Enter admin password:");
-      return u === ADMIN_USERNAME && p === ADMIN_PASSWORD;
-    }
+    window.login = function () {
+      const u = document.getElementById("username").value;
+      const p = document.getElementById("password").value;
 
-    async function verifyAndResetId() {
-      if (verifyAdminAccess()) {
+      if (u === ADMIN_USERNAME && p === ADMIN_PASSWORD) {
+        document.getElementById("loginPanel").style.display = "none";
+        document.getElementById("adminPanel").style.display = "block";
+        document.getElementById("logoutBtn").style.display = "block";
+      } else {
+        alert("❌ Invalid username or password");
+      }
+    };
+
+    window.logout = function () {
+      document.getElementById("loginPanel").style.display = "block";
+      document.getElementById("adminPanel").style.display = "none";
+      document.getElementById("logoutBtn").style.display = "none";
+    };
+
+    window.resetTripId = async function () {
+      await set(ref(db, "tripResetFlag"), true);
+      alert("✅ Trip ID reset to #NST001. Refresh trip.html to see changes.");
+    };
+
+    window.resetAllTrips = async function () {
+      const confirmReset = confirm("⚠️ Are you sure? This will DELETE all trips permanently.");
+      if (confirmReset) {
+        await remove(ref(db, "trips"));
         await set(ref(db, "tripResetFlag"), true);
-        alert("✅ Trip ID has been reset to #NST001. Go to trip.html to see changes.");
-      } else {
-        alert("❌ Access denied. Invalid username or password.");
+        alert("🗑️ All trips deleted and Trip ID reset.");
       }
-    }
-
-    async function verifyAndDeleteAll() {
-      if (verifyAdminAccess()) {
-        const confirmReset = confirm("⚠️ Are you sure you want to delete ALL trips?");
-        if (confirmReset) {
-          await remove(ref(db, "trips"));
-          await set(ref(db, "tripResetFlag"), true);
-          alert("🗑️ All trip data deleted and Trip ID reset.");
-        }
-      } else {
-        alert("❌ Access denied. Invalid username or password.");
-      }
-    }
+    };
   </script>
 </body>
 </html>
