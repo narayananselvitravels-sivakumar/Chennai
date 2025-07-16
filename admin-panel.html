@@ -70,30 +70,30 @@
     const ADMIN_PASSWORD = "Nst@1007";
 
     function verifyAdminAccess() {
-      const u = prompt("Enter admin username:");
-      const p = prompt("Enter admin password:");
+      const u = prompt("👤 Enter admin username:");
+      const p = prompt("🔒 Enter admin password:");
       return u === ADMIN_USERNAME && p === ADMIN_PASSWORD;
     }
 
     async function verifyAndResetId() {
       if (verifyAdminAccess()) {
         await set(ref(db, "tripResetFlag"), true);
-        alert("✅ Trip ID has been reset to #NST001. Refresh trip.html to see changes.");
+        alert("✅ Trip ID has been reset to #NST001. Go to trip.html to see changes.");
       } else {
-        alert("❌ Invalid credentials. Access denied.");
+        alert("❌ Access denied. Invalid username or password.");
       }
     }
 
     async function verifyAndDeleteAll() {
       if (verifyAdminAccess()) {
-        const confirmReset = confirm("⚠️ Are you sure? This will delete ALL trips permanently.");
+        const confirmReset = confirm("⚠️ Are you sure you want to delete ALL trips?");
         if (confirmReset) {
           await remove(ref(db, "trips"));
           await set(ref(db, "tripResetFlag"), true);
-          alert("🗑️ All trips deleted and Trip ID reset.");
+          alert("🗑️ All trip data deleted and Trip ID reset.");
         }
       } else {
-        alert("❌ Invalid credentials. Access denied.");
+        alert("❌ Access denied. Invalid username or password.");
       }
     }
   </script>
