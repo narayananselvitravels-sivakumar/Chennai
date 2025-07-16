@@ -22,14 +22,11 @@
     .btn-block {
       margin-bottom: 15px;
     }
-    #logoutBtn {
-      display: none;
-    }
   </style>
 </head>
 <body>
   <!-- 🔐 Login Panel -->
-  <div class="panel" id="loginPanel">
+  <div class="panel" id="loginPanel" style="display: none;">
     <h3 class="mb-4 text-center">🔐 Admin Login</h3>
     <div class="mb-3">
       <label class="form-label">Username</label>
@@ -42,12 +39,12 @@
     <button class="btn btn-success w-100" onclick="login()">Login</button>
   </div>
 
-  <!-- ✅ Admin Control Panel -->
-  <div class="panel" id="adminPanel" style="display:none">
+  <!-- ✅ Admin Panel -->
+  <div class="panel" id="adminPanel" style="display: none;">
     <h3 class="mb-4 text-center">🔧 Admin Panel - NST Travels</h3>
-    <button class="btn btn-outline-danger w-100 mb-3" id="logoutBtn" onclick="logout()">🚪 Logout</button>
+    <button class="btn btn-outline-danger w-100 mb-3" onclick="logout()">🚪 Logout</button>
 
-    <!-- Admin Pages -->
+    <!-- Admin Navigation -->
     <div class="d-grid gap-2">
       <a href="admin-dashboard.html" class="btn btn-primary btn-block">Dashboard</a>
       <a href="attendance.html" class="btn btn-primary btn-block">Attendance</a>
@@ -60,7 +57,7 @@
 
     <hr class="my-4" />
 
-    <!-- Reset Options -->
+    <!-- 🔁 Reset Section -->
     <h5>🛠 Reset Tools</h5>
     <button class="btn btn-warning w-100 mb-3" onclick="resetTripId()">🔁 Reset Trip ID to #NST001</button>
     <button class="btn btn-danger w-100" onclick="resetAllTrips()">🗑️ Reset All Trip Data</button>
@@ -86,28 +83,45 @@
     const ADMIN_USERNAME = "Siva";
     const ADMIN_PASSWORD = "Nst@1007";
 
-    window.login = function () {
-      const u = document.getElementById("username").value;
-      const p = document.getElementById("password").value;
+    // Check login on page load
+    window.addEventListener("DOMContentLoaded", () => {
+      if (localStorage.getItem("loggedIn") === "true") {
+        showAdminPanel();
+      } else {
+        showLoginPanel();
+      }
+    });
 
-      if (u === ADMIN_USERNAME && p === ADMIN_PASSWORD) {
-        document.getElementById("loginPanel").style.display = "none";
-        document.getElementById("adminPanel").style.display = "block";
-        document.getElementById("logoutBtn").style.display = "block";
+    function showAdminPanel() {
+      document.getElementById("loginPanel").style.display = "none";
+      document.getElementById("adminPanel").style.display = "block";
+    }
+
+    function showLoginPanel() {
+      document.getElementById("loginPanel").style.display = "block";
+      document.getElementById("adminPanel").style.display = "none";
+    }
+
+    window.login = function () {
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+
+      if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+        localStorage.setItem("loggedIn", "true");
+        showAdminPanel();
       } else {
         alert("❌ Invalid username or password");
       }
     };
 
     window.logout = function () {
-      document.getElementById("loginPanel").style.display = "block";
-      document.getElementById("adminPanel").style.display = "none";
-      document.getElementById("logoutBtn").style.display = "none";
+      localStorage.removeItem("loggedIn");
+      showLoginPanel();
     };
 
     window.resetTripId = async function () {
       await set(ref(db, "tripResetFlag"), true);
-      alert("✅ Trip ID reset to #NST001. Refresh trip.html to see changes.");
+      alert("✅ Trip ID reset to #NST001. Refresh trip.html to see the change.");
     };
 
     window.resetAllTrips = async function () {
