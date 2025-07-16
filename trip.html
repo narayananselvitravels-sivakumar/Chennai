@@ -17,6 +17,7 @@
       padding: 30px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      position: relative;
     }
     h3, h5 {
       margin-top: 25px;
@@ -30,14 +31,21 @@
         padding: 20px;
       }
     }
+    /* Admin panel button on top right */
+    .admin-panel-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
 <div class="container">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>📋 NST Trip Summary</h3>
-    <a href="admin-panel.html" class="btn btn-primary">Admin Panel</a>
-  </div>
+  <!-- Admin Panel button -->
+  <a href="admin-panel.html" class="btn btn-primary admin-panel-btn">Admin Panel</a>
+
+  <h3>📋 NST Trip Summary</h3>
   <form id="tripForm">
 
     <!-- 🗓 TRIP DETAILS -->
@@ -94,9 +102,7 @@
     <div class="row mb-3">
       <div class="col-md-6">
         <label class="form-label">Name</label>
-        <select class="form-select" id="driverName" required>
-          <option value="">Select Driver</option>
-        </select>
+        <select class="form-select" id="driverName" required></select>
       </div>
       <div class="col-md-6">
         <label class="form-label">Number</label>
@@ -109,9 +115,7 @@
     <div class="row mb-3">
       <div class="col-md-6">
         <label class="form-label">Model</label>
-        <select class="form-select" id="vehicleModel" required>
-          <option value="">Select Vehicle Model</option>
-        </select>
+        <select class="form-select" id="vehicleModel" required></select>
       </div>
       <div class="col-md-6">
         <label class="form-label">Number</label>
@@ -207,17 +211,20 @@
   const db = getDatabase(app);
   const dbRef = ref(db);
 
+  // Helper to convert time "HH:MM" to minutes
   function timeToMinutes(t) {
     const [h, m] = t.split(":").map(Number);
     return h * 60 + m;
   }
 
+  // Generate Trip ID based on count of trips in Firebase
   async function generateTripId() {
     const snap = await get(child(dbRef, 'trips'));
     const count = snap.exists() ? Object.keys(snap.val()).length + 1 : 1;
     return `#NST${String(count).padStart(3, '0')}`;
   }
 
+  // Check if trip id already exists
   async function tripIdExists(tripId) {
     const snap = await get(child(dbRef, 'trips'));
     if (snap.exists()) {
@@ -226,6 +233,7 @@
     return false;
   }
 
+  // Generate WhatsApp message text
   function generateWhatsAppMessage(data) {
     return `
 📋 *${data.bookingId} - NST Trip Summary*
@@ -252,62 +260,55 @@
 `.trim();
   }
 
+  // Load drivers and populate dropdowns
   async function loadDrivers() {
-    const driversSnap = await get(child(dbRef, 'drivers'));
-    const driverNameSelect = document.getElementById('driverName');
-    driverNameSelect.innerHTML = '<option value="">Select Driver</option>';
-    if (driversSnap.exists()) {
-      const drivers = driversSnap.val();
-      for (const id in drivers) {
-        const d = drivers[id];
+    const snap = await get(child(dbRef, 'drivers'));
+    const driverSelect = document.getElementById('driverName');
+    driverSelect.innerHTML = '<option value="">Select Driver</option>';
+    if (snap.exists()) {
+      const drivers = snap.val();
+      for (const key in drivers) {
+        const d = drivers[key];
         const option = document.createElement('option');
         option.value = d.name;
         option.dataset.number = d.number;
         option.textContent = d.name;
-        driverNameSelect.appendChild(option);
+        driverSelect.appendChild(option);
       }
     }
   }
 
+  // Load vehicles and populate dropdowns
   async function loadVehicles() {
-    const vehiclesSnap = await get(child(dbRef, 'vehicles'));
-    const vehicleModelSelect = document.getElementById('vehicleModel');
-    vehicleModelSelect.innerHTML = '<option value="">Select Vehicle Model</option>';
-    if (vehiclesSnap.exists()) {
-      const vehicles = vehiclesSnap.val();
-      for (const id in vehicles) {
-        const v = vehicles[id];
+    const snap = await get(child(dbRef, 'vehicles'));
+    const vehicleSelect = document.getElementById('vehicleModel');
+    vehicleSelect.innerHTML = '<option value="">Select Vehicle</option>';
+    if (snap.exists()) {
+      const vehicles = snap.val();
+      for (const key in vehicles) {
+        const v = vehicles[key];
         const option = document.createElement('option');
         option.value = v.model;
         option.dataset.number = v.number;
         option.textContent = v.model;
-        vehicleModelSelect.appendChild(option);
+        vehicleSelect.appendChild(option);
       }
     }
   }
 
-  window.addEventListener("DOMContentLoaded", async () => {
-    document.getElementById("bookingId").value = await generateTripId();
-
-    await loadDrivers();
-    await loadVehicles();
-
-    document.getElementById("driverName").addEventListener("change", (e) => {
-      const selectedOption = e.target.selectedOptions[0];
-      document.getElementById("driverNumber").value = selectedOption.dataset.number || '';
-    });
-
-    document.getElementById("vehicleModel").addEventListener("change", (e) => {
-      const selectedOption = e.target.selectedOptions[0];
-      document.getElementById("vehicleNumber").value = selectedOption.dataset.number || '';
-    });
-
-    document.getElementById("startTime").addEventListener("change", calcDuration);
-    document.getElementById("endTime").addEventListener("change", calcDuration);
-    document.getElementById("startKm").addEventListener("input", calcTotalKm);
-    document.getElementById("endKm").addEventListener("input", calcTotalKm);
+  // When driver selected, auto-fill number
+  document.getElementById('driverName').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    document.getElementById('driverNumber').value = selectedOption.dataset.number || '';
   });
 
+  // When vehicle selected, auto-fill number
+  document.getElementById('vehicleModel').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    document.getElementById('vehicleNumber').value = selectedOption.dataset.number || '';
+  });
+
+  // Calculate duration based on start and end time
   function calcDuration() {
     const start = document.getElementById("startTime").value;
     const end = document.getElementById("endTime").value;
@@ -319,6 +320,7 @@
     }
   }
 
+  // Calculate total KM
   function calcTotalKm() {
     const sk = parseFloat(document.getElementById("startKm").value);
     const ek = parseFloat(document.getElementById("endKm").value);
@@ -327,12 +329,46 @@
     }
   }
 
+  window.addEventListener("DOMContentLoaded", async () => {
+    // Generate initial trip ID
+    document.getElementById("bookingId").value = await generateTripId();
+
+    // Load dropdown data
+    await loadDrivers();
+    await loadVehicles();
+
+    // Add event listeners for calc
+    document.getElementById("startTime").addEventListener("change", calcDuration);
+    document.getElementById("endTime").addEventListener("change", calcDuration);
+    document.getElementById("startKm").addEventListener("input", calcTotalKm);
+    document.getElementById("endKm").addEventListener("input", calcTotalKm);
+
+    // Listen for trip ID reset from admin-panel
+    const resetFlagRef = ref(db, 'tripResetFlag/');
+    onValue(resetFlagRef, (snapshot) => {
+      if (snapshot.exists()) {
+        // Update trip ID input to reset value
+        document.getElementById("bookingId").value = "#NST001";
+      }
+    });
+  });
+
+  // On form submit - share on WhatsApp and save trip if not duplicate
   document.getElementById("tripForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const form = e.target;
 
     const data = Object.fromEntries(new FormData(form));
     data.bookingId = document.getElementById("bookingId").value;
+    data.driverName = document.getElementById("driverName").value;
+    data.driverNumber = document.getElementById("driverNumber").value;
+    data.vehicleModel = document.getElementById("vehicleModel").value;
+    data.vehicleNumber = document.getElementById("vehicleNumber").value;
+
+    if (!data.driverName || !data.driverNumber || !data.vehicleModel || !data.vehicleNumber) {
+      alert("Please select both Driver and Vehicle details.");
+      return;
+    }
 
     if (await tripIdExists(data.bookingId)) {
       alert("❌ Trip ID already exists. Cannot save.");
