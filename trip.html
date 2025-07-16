@@ -17,7 +17,6 @@
       padding: 30px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
-      position: relative;
     }
     h3, h5 {
       margin-top: 25px;
@@ -26,28 +25,23 @@
     .form-label {
       font-weight: 500;
     }
+    .admin-link {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
     @media (max-width: 768px) {
       .container {
         padding: 20px;
       }
     }
-    /* Admin panel button on top right */
-    .admin-panel-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      z-index: 1000;
-    }
   </style>
 </head>
 <body>
+<a href="admin-panel.html" class="btn btn-sm btn-dark admin-link">⚙️ Admin Panel</a>
 <div class="container">
-  <!-- Admin Panel button -->
-  <a href="admin-panel.html" class="btn btn-primary admin-panel-btn">Admin Panel</a>
-
   <h3>📋 NST Trip Summary</h3>
   <form id="tripForm">
-
     <!-- 🗓 TRIP DETAILS -->
     <h5>🗓 Trip Details</h5>
     <div class="row mb-3">
@@ -194,48 +188,51 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, push, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getDatabase, ref, push, set, child,
+  get, onValue
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
-    authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
-    databaseURL: "https://narayananselvitravels-26dcb-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "narayananselvitravels-26dcb",
-    storageBucket: "narayananselvitravels-26dcb.firebasestorage.app",
-    messagingSenderId: "395599682835",
-    appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
+  authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
+  databaseURL: "https://narayananselvitravels-26dcb-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "narayananselvitravels-26dcb",
+  storageBucket: "narayananselvitravels-26dcb.appspot.com",
+  messagingSenderId: "395599682835",
+  appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const dbRef = ref(db);
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const dbRef = ref(db);
 
-  // Helper to convert time "HH:MM" to minutes
-  function timeToMinutes(t) {
-    const [h, m] = t.split(":").map(Number);
-    return h * 60 + m;
+function timeToMinutes(t) {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+async function generateTripId() {
+  const snap = await get(child(dbRef, 'tripResetFlag'));
+  const reset = snap.exists() && (snap.val() === true || snap.val() === "reset");
+  if (reset) return "#NST001";
+
+  const tripsSnap = await get(child(dbRef, 'trips'));
+  const count = tripsSnap.exists() ? Object.keys(tripsSnap.val()).length + 1 : 1;
+  return `#NST${String(count).padStart(3, '0')}`;
+}
+
+async function tripIdExists(tripId) {
+  const snap = await get(child(dbRef, 'trips'));
+  if (snap.exists()) {
+    return Object.values(snap.val()).some(trip => trip.bookingId === tripId);
   }
+  return false;
+}
 
-  // Generate Trip ID based on count of trips in Firebase
-  async function generateTripId() {
-    const snap = await get(child(dbRef, 'trips'));
-    const count = snap.exists() ? Object.keys(snap.val()).length + 1 : 1;
-    return `#NST${String(count).padStart(3, '0')}`;
-  }
-
-  // Check if trip id already exists
-  async function tripIdExists(tripId) {
-    const snap = await get(child(dbRef, 'trips'));
-    if (snap.exists()) {
-      return Object.values(snap.val()).some(trip => trip.bookingId === tripId);
-    }
-    return false;
-  }
-
-  // Generate WhatsApp message text
-  function generateWhatsAppMessage(data) {
-    return `
+function generateWhatsAppMessage(data) {
+  return `
 📋 *${data.bookingId} - NST Trip Summary*
 🗓 *Date:* ${data.date}
 📍 *Pickup:* ${data.pickupLocation}
@@ -258,129 +255,105 @@
 💵 *Total:* ₹${data.totalAmount}
 💳 *Payment:* ${data.paymentStatus}
 `.trim();
-  }
+}
 
-  // Load drivers and populate dropdowns
-  async function loadDrivers() {
-    const snap = await get(child(dbRef, 'drivers'));
-    const driverSelect = document.getElementById('driverName');
-    driverSelect.innerHTML = '<option value="">Select Driver</option>';
-    if (snap.exists()) {
-      const drivers = snap.val();
-      for (const key in drivers) {
-        const d = drivers[key];
-        const option = document.createElement('option');
-        option.value = d.name;
-        option.dataset.number = d.number;
-        option.textContent = d.name;
-        driverSelect.appendChild(option);
-      }
-    }
-  }
-
-  // Load vehicles and populate dropdowns
-  async function loadVehicles() {
-    const snap = await get(child(dbRef, 'vehicles'));
-    const vehicleSelect = document.getElementById('vehicleModel');
-    vehicleSelect.innerHTML = '<option value="">Select Vehicle</option>';
-    if (snap.exists()) {
-      const vehicles = snap.val();
-      for (const key in vehicles) {
-        const v = vehicles[key];
-        const option = document.createElement('option');
-        option.value = v.model;
-        option.dataset.number = v.number;
-        option.textContent = v.model;
-        vehicleSelect.appendChild(option);
-      }
-    }
-  }
-
-  // When driver selected, auto-fill number
-  document.getElementById('driverName').addEventListener('change', function() {
-    const selectedOption = this.options[this.selectedIndex];
-    document.getElementById('driverNumber').value = selectedOption.dataset.number || '';
-  });
-
-  // When vehicle selected, auto-fill number
-  document.getElementById('vehicleModel').addEventListener('change', function() {
-    const selectedOption = this.options[this.selectedIndex];
-    document.getElementById('vehicleNumber').value = selectedOption.dataset.number || '';
-  });
-
-  // Calculate duration based on start and end time
-  function calcDuration() {
-    const start = document.getElementById("startTime").value;
-    const end = document.getElementById("endTime").value;
-    if (start && end) {
-      let sm = timeToMinutes(start);
-      let em = timeToMinutes(end);
-      if (em < sm) em += 24 * 60;
-      document.getElementById("duration").value = ((em - sm) / 60).toFixed(2);
-    }
-  }
-
-  // Calculate total KM
-  function calcTotalKm() {
-    const sk = parseFloat(document.getElementById("startKm").value);
-    const ek = parseFloat(document.getElementById("endKm").value);
-    if (!isNaN(sk) && !isNaN(ek) && ek >= sk) {
-      document.getElementById("totalKm").value = (ek - sk).toFixed(2);
-    }
-  }
-
-  window.addEventListener("DOMContentLoaded", async () => {
-    // Generate initial trip ID
-    document.getElementById("bookingId").value = await generateTripId();
-
-    // Load dropdown data
-    await loadDrivers();
-    await loadVehicles();
-
-    // Add event listeners for calc
-    document.getElementById("startTime").addEventListener("change", calcDuration);
-    document.getElementById("endTime").addEventListener("change", calcDuration);
-    document.getElementById("startKm").addEventListener("input", calcTotalKm);
-    document.getElementById("endKm").addEventListener("input", calcTotalKm);
-
-    // Listen for trip ID reset from admin-panel
-    const resetFlagRef = ref(db, 'tripResetFlag/');
-    onValue(resetFlagRef, (snapshot) => {
-      if (snapshot.exists()) {
-        // Update trip ID input to reset value
-        document.getElementById("bookingId").value = "#NST001";
-      }
+async function loadDrivers() {
+  const snap = await get(child(dbRef, 'drivers'));
+  const select = document.getElementById("driverName");
+  if (snap.exists()) {
+    const data = snap.val();
+    Object.values(data).forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d.name;
+      opt.text = d.name;
+      opt.setAttribute("data-number", d.number);
+      select.appendChild(opt);
     });
+  }
+}
+
+async function loadVehicles() {
+  const snap = await get(child(dbRef, 'vehicles'));
+  const select = document.getElementById("vehicleModel");
+  if (snap.exists()) {
+    const data = snap.val();
+    Object.values(data).forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = v.model;
+      opt.text = v.model;
+      opt.setAttribute("data-number", v.number);
+      select.appendChild(opt);
+    });
+  }
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  document.getElementById("bookingId").value = await generateTripId();
+
+  await loadDrivers();
+  await loadVehicles();
+
+  document.getElementById("startTime").addEventListener("change", calcDuration);
+  document.getElementById("endTime").addEventListener("change", calcDuration);
+  document.getElementById("startKm").addEventListener("input", calcTotalKm);
+  document.getElementById("endKm").addEventListener("input", calcTotalKm);
+
+  document.getElementById("driverName").addEventListener("change", function () {
+    const number = this.selectedOptions[0].getAttribute("data-number");
+    document.getElementById("driverNumber").value = number || "";
   });
 
-  // On form submit - share on WhatsApp and save trip if not duplicate
-  document.getElementById("tripForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const form = e.target;
-
-    const data = Object.fromEntries(new FormData(form));
-    data.bookingId = document.getElementById("bookingId").value;
-    data.driverName = document.getElementById("driverName").value;
-    data.driverNumber = document.getElementById("driverNumber").value;
-    data.vehicleModel = document.getElementById("vehicleModel").value;
-    data.vehicleNumber = document.getElementById("vehicleNumber").value;
-
-    if (!data.driverName || !data.driverNumber || !data.vehicleModel || !data.vehicleNumber) {
-      alert("Please select both Driver and Vehicle details.");
-      return;
-    }
-
-    if (await tripIdExists(data.bookingId)) {
-      alert("❌ Trip ID already exists. Cannot save.");
-      return;
-    }
-
-    await push(ref(db, "trips/"), data);
-
-    const message = generateWhatsAppMessage(data);
-    const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+  document.getElementById("vehicleModel").addEventListener("change", function () {
+    const number = this.selectedOptions[0].getAttribute("data-number");
+    document.getElementById("vehicleNumber").value = number || "";
   });
+
+  // Reset trip ID if flag is triggered in Firebase
+  const resetFlagRef = ref(db, 'tripResetFlag/');
+  onValue(resetFlagRef, async (snapshot) => {
+    const flag = snapshot.val();
+    if (flag === true || flag === "reset") {
+      document.getElementById("bookingId").value = "#NST001";
+    }
+  });
+});
+
+function calcDuration() {
+  const start = document.getElementById("startTime").value;
+  const end = document.getElementById("endTime").value;
+  if (start && end) {
+    let sm = timeToMinutes(start);
+    let em = timeToMinutes(end);
+    if (em < sm) em += 24 * 60;
+    document.getElementById("duration").value = ((em - sm) / 60).toFixed(2);
+  }
+}
+
+function calcTotalKm() {
+  const sk = parseFloat(document.getElementById("startKm").value);
+  const ek = parseFloat(document.getElementById("endKm").value);
+  if (!isNaN(sk) && !isNaN(ek) && ek >= sk) {
+    document.getElementById("totalKm").value = (ek - sk).toFixed(2);
+  }
+}
+
+document.getElementById("tripForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form));
+  data.bookingId = document.getElementById("bookingId").value;
+
+  if (await tripIdExists(data.bookingId)) {
+    alert("❌ Trip ID already exists. Cannot save.");
+    return;
+  }
+
+  await push(ref(db, "trips/"), data);
+
+  const message = generateWhatsAppMessage(data);
+  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
+});
 </script>
 </body>
 </html>
