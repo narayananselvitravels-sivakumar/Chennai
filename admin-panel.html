@@ -7,65 +7,58 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"/>
   <style>
     body {
-      background-color: #f4f7fc;
+      background: #f4f7fc;
       font-family: 'Segoe UI', sans-serif;
+      padding: 40px;
     }
-    .container {
-      max-width: 900px;
-      margin-top: 30px;
+    .panel {
       background: white;
       padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      border-radius: 12px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 15px rgba(0,0,0,0.05);
     }
-    h3 {
-      font-weight: 600;
-      margin-bottom: 20px;
-    }
-    .btn-group-vertical > .btn {
-      margin-bottom: 10px;
-    }
-    @media (max-width: 768px) {
-      .container {
-        padding: 20px;
-      }
-      .btn-group-vertical > .btn {
-        width: 100%;
-      }
+    .btn-block {
+      margin-bottom: 15px;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h3>Admin Panel - NST Travels</h3>
-    <div class="btn-group-vertical w-100">
-      <a href="admin-dashboard.html" class="btn btn-primary">Admin Dashboard</a>
-      <a href="attendance.html" class="btn btn-primary">Attendance</a>
-      <a href="driver-dashboard.html" class="btn btn-primary">Driver Dashboard</a>
-      <a href="drivers-vehicles.html" class="btn btn-primary">Drivers & Vehicles</a>
-      <a href="payment-summary.html" class="btn btn-primary">Payment Summary</a>
-      <a href="revenue.html" class="btn btn-primary">Revenue</a>
-      <a href="trip-summary.html" class="btn btn-primary">Trip Summary</a>
-      <!-- Add more buttons as needed -->
+  <div class="panel">
+    <h3 class="mb-4 text-center">🔐 Admin Panel - NST Travels</h3>
+
+    <!-- Admin Page Shortcuts -->
+    <div class="d-grid gap-2">
+      <a href="admin-dashboard.html" class="btn btn-primary btn-block">Dashboard</a>
+      <a href="attendance.html" class="btn btn-primary btn-block">Attendance</a>
+      <a href="driver-dashboard.html" class="btn btn-primary btn-block">Driver Dashboard</a>
+      <a href="drivers-vehicles.html" class="btn btn-primary btn-block">Drivers & Vehicles</a>
+      <a href="payment-summary.html" class="btn btn-primary btn-block">Payment Summary</a>
+      <a href="revenue.html" class="btn btn-primary btn-block">Revenue</a>
+      <a href="trip-summary.html" class="btn btn-primary btn-block">Trip Summary</a>
     </div>
 
-    <!-- Reset Trip ID & Clear Trips Buttons -->
-    <div class="mt-5">
-      <button id="resetTripIdBtn" class="btn btn-warning w-100 mb-3">Reset Trip ID Counter (#NST001)</button>
-      <button id="resetAllDataBtn" class="btn btn-danger w-100">Reset All Trips Data</button>
-    </div>
+    <hr class="my-4" />
+
+    <!-- Reset Section -->
+    <h5>🛠 Reset Tools</h5>
+    <button class="btn btn-warning w-100 mb-3" onclick="verifyAndResetId()">🔁 Reset Trip ID to #NST001</button>
+    <button class="btn btn-danger w-100" onclick="verifyAndDeleteAll()">🗑️ Reset All Trip Data</button>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, remove, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import {
+      getDatabase, ref, remove, set
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
       authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
       databaseURL: "https://narayananselvitravels-26dcb-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "narayananselvitravels-26dcb",
-      storageBucket: "narayananselvitravels-26dcb.firebasestorage.app",
+      storageBucket: "narayananselvitravels-26dcb.appspot.com",
       messagingSenderId: "395599682835",
       appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
     };
@@ -73,38 +66,36 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const correctPassword = "Nst@1007";
+    const ADMIN_USERNAME = "Siva";
+    const ADMIN_PASSWORD = "Nst@1007";
 
-    async function verifyAndExecute(actionFunc) {
-      const adminPassword = prompt("Please enter admin password to confirm:");
-      if (adminPassword === null) return; // Cancelled
-      if (adminPassword !== correctPassword) {
-        alert("❌ Incorrect password. Operation aborted.");
-        return;
-      }
-      if (!confirm("⚠️ Are you sure? This operation cannot be undone!")) return;
-      try {
-        await actionFunc();
-        alert("✅ Operation successful.");
-      } catch (error) {
-        alert("❌ Error: " + error.message);
+    function verifyAdminAccess() {
+      const u = prompt("Enter admin username:");
+      const p = prompt("Enter admin password:");
+      return u === ADMIN_USERNAME && p === ADMIN_PASSWORD;
+    }
+
+    async function verifyAndResetId() {
+      if (verifyAdminAccess()) {
+        await set(ref(db, "tripResetFlag"), true);
+        alert("✅ Trip ID has been reset to #NST001. Refresh trip.html to see changes.");
+      } else {
+        alert("❌ Invalid credentials. Access denied.");
       }
     }
 
-    document.getElementById("resetTripIdBtn").addEventListener("click", () => {
-      verifyAndExecute(async () => {
-        // Reset tripCounter to 0 (so next trip ID = #NST001)
-        await set(ref(db, "tripCounter"), 0);
-      });
-    });
-
-    document.getElementById("resetAllDataBtn").addEventListener("click", () => {
-      verifyAndExecute(async () => {
-        // Clear trips node and reset tripCounter
-        await remove(ref(db, "trips"));
-        await set(ref(db, "tripCounter"), 0);
-      });
-    });
+    async function verifyAndDeleteAll() {
+      if (verifyAdminAccess()) {
+        const confirmReset = confirm("⚠️ Are you sure? This will delete ALL trips permanently.");
+        if (confirmReset) {
+          await remove(ref(db, "trips"));
+          await set(ref(db, "tripResetFlag"), true);
+          alert("🗑️ All trips deleted and Trip ID reset.");
+        }
+      } else {
+        alert("❌ Invalid credentials. Access denied.");
+      }
+    }
   </script>
 </body>
 </html>
