@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard - NST Travels</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #f0f2f7;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      flex-grow: 1;
+    }
+    h1 {
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 25px;
+    }
+    .stat-card {
+      cursor: pointer;
+      transition: transform 0.15s ease-in-out;
+      user-select: none;
+    }
+    .stat-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .stat-number {
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: #007bff;
+    }
+    .card-title {
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .quick-actions {
+      margin-bottom: 30px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .quick-actions button {
+      min-width: 140px;
+    }
+    #searchFilters {
+      margin-bottom: 25px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    #recentActivity {
+      max-height: 400px;
+      overflow-y: auto;
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    #recentActivity h2 {
+      font-size: 1.4rem;
+      margin-bottom: 15px;
+      font-weight: 600;
+      color: #444;
+    }
+    .activity-item {
+      border-bottom: 1px solid #ddd;
+      padding: 8px 0;
+      font-size: 0.95rem;
+    }
+    .activity-item:last-child {
+      border-bottom: none;
+    }
+    .activity-item span {
+      font-weight: 600;
+    }
+    .chart-container {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    .widget-toggle {
+      margin-bottom: 15px;
+    }
+    @media (max-width: 600px) {
+      #searchFilters {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .quick-actions {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Admin Dashboard</h1>
+
+    <!-- Summary Stat Cards -->
+    <div class="nav-grid">
+      <div class="card p-4 text-center stat-card" id="tripsCard">
+        <div class="stat-number" id="totalTrips">0</div>
+        <div class="card-title mt-2">Total Trips</div>
+      </div>
+      <div class="card p-4 text-center stat-card" id="driversCard">
+        <div class="stat-number" id="totalDrivers">0</div>
+        <div class="card-title mt-2">Total Drivers</div>
+      </div>
+      <div class="card p-4 text-center stat-card" id="vehiclesCard">
+        <div class="stat-number" id="totalVehicles">0</div>
+        <div class="card-title mt-2">Total Vehicles</div>
+      </div>
+      <div class="card p-4 text-center stat-card" id="pendingPaymentsCard">
+        <div class="stat-number" id="pendingPayments">0</div>
+        <div class="card-title mt-2">Pending Payments</div>
+      </div>
+      <div class="card p-4 text-center stat-card" id="revenueCard">
+        <div class="stat-number" id="totalRevenue">₹0</div>
+        <div class="card-title mt-2">Total Revenue</div>
+      </div>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="quick-actions">
+      <button type="button" class="btn btn-primary" id="btnAddTrip">Add New Trip</button>
+      <button type="button" class="btn btn-secondary" id="btnAddDriver">Add New Driver</button>
+      <button type="button" class="btn btn-secondary" id="btnAddVehicle">Add New Vehicle</button>
+      <button type="button" class="btn btn-warning" id="btnAddPayment">Add Payment Entry</button>
+    </div>
+
+    <!-- Search and Filters -->
+    <div id="searchFilters">
+      <input type="text" id="globalSearch" class="form-control" placeholder="Search Trips, Drivers, Vehicles..." />
+      <select id="filterDriver" class="form-select" style="max-width: 200px;">
+        <option value="">Filter by Driver</option>
+      </select>
+      <select id="filterVehicle" class="form-select" style="max-width: 200px;">
+        <option value="">Filter by Vehicle</option>
+      </select>
+      <select id="filterPaymentStatus" class="form-select" style="max-width: 180px;">
+        <option value="">Payment Status</option>
+        <option value="Paid">Paid</option>
+        <option value="Pending">Pending</option>
+        <option value="Not Paid">Not Paid</option>
+      </select>
+      <div>
+        <label for="filterDateStart" class="form-label mb-0">From:</label>
+        <input type="date" id="filterDateStart" class="form-control" />
+      </div>
+      <div>
+        <label for="filterDateEnd" class="form-label mb-0">To:</label>
+        <input type="date" id="filterDateEnd" class="form-control" />
+      </div>
+    </div>
+
+    <!-- Recent Activity Feed -->
+    <div id="recentActivity">
+      <h2>Recent Trips</h2>
+      <div id="activityList"></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="widget-toggle form-check form-switch">
+      <input class="form-check-input" type="checkbox" id="toggleCharts" checked>
+      <label class="form-check-label" for="toggleCharts">Show Charts</label>
+    </div>
+
+    <div id="chartsSection" class="chart-container">
+      <canvas id="revenueChart" height="200"></canvas>
+      <canvas id="tripsPerDriverChart" height="200" style="margin-top:30px;"></canvas>
+      <canvas id="paymentStatusChart" height="200" style="margin-top:30px;"></canvas>
+    </div>
+
+    <!-- Export Buttons -->
+    <div class="quick-actions" style="justify-content:flex-start;">
+      <button class="btn btn-success" id="exportExcelBtn">Export Excel</button>
+      <button class="btn btn-danger" id="exportPdfBtn">Export PDF</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
+      authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
+      databaseURL: "https://narayananselvitravels-26dcb-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "narayananselvitravels-26dcb",
+      storageBucket: "narayananselvitravels-26dcb.appspot.com",
+      messagingSenderId: "395599682835",
+      appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Utility: format currency INR
+    function formatCurrency(num) {
+      return num.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+    }
+
+    let allTrips = {};
+    let allDrivers = {};
+    let allVehicles = {};
+
+    async function loadAllData() {
+      const [tripsSnap, driversSnap, vehiclesSnap] = await Promise.all([
+        db.ref('trips').once('value'),
+        db.ref('drivers').once('value'),
+        db.ref('vehicles').once('value')
+      ]);
+      allTrips = tripsSnap.exists() ? tripsSnap.val() : {};
+      allDrivers = driversSnap.exists() ? driversSnap.val() : {};
+      allVehicles = vehiclesSnap.exists() ? vehiclesSnap.val() : {};
+    }
+
+    // Populate filter dropdowns for Driver and Vehicle
+    function populateFilterOptions() {
+      const driverSelect = document.getElementById('filterDriver');
+      driverSelect.innerHTML = '<option value="">Filter by Driver</option>';
+      Object.values(allDrivers).forEach(d => {
+        driverSelect.innerHTML += `<option value="${d.name}">${d.name}</option>`;
+      });
+
+      const vehicleSelect = document.getElementById('filterVehicle');
+      vehicleSelect.innerHTML = '<option value="">Filter by Vehicle</option>';
+      Object.values(allVehicles).forEach(v => {
+        vehicleSelect.innerHTML += `<option value="${v.model}">${v.model}</option>`;
+      });
+    }
+
+    // Filter trips by search and filters
+    function filterTrips() {
+      const searchTerm = document.getElementById('globalSearch').value.toLowerCase();
+      const driverFilter = document.getElementById('filterDriver').value;
+      const vehicleFilter = document.getElementById('filterVehicle').value;
+      const paymentFilter = document.getElementById('filterPaymentStatus').value;
+      const dateStart = document.getElementById('filterDateStart').value;
+      const dateEnd = document.getElementById('filterDateEnd').value;
+
+      return Object.values(allTrips).filter(trip => {
+        let matches = true;
+        if (searchTerm) {
+          const combined = Object.values(trip).join(' ').toLowerCase();
+          if (!combined.includes(searchTerm)) matches = false;
+        }
+        if (driverFilter && trip.driverName !== driverFilter) matches = false;
+        if (vehicleFilter && trip.vehicleModel !== vehicleFilter) matches = false;
+        if (paymentFilter && trip.paymentStatus !== paymentFilter) matches = false;
+
+        if (dateStart) {
+          if (!trip.date || trip.date < dateStart) matches = false;
+        }
+        if (dateEnd) {
+          if (!trip.date || trip.date > dateEnd) matches = false;
+        }
+        return matches;
+      });
+    }
+
+    // Render recent trips list (latest 10 by date descending)
+    function renderRecentActivity(filteredTrips) {
+      const container = document.getElementById('activityList');
+      container.innerHTML = '';
+
+      const sortedTrips = filteredTrips.sort((a,b) => {
+        const aDate = new Date(`${a.date}T${a.startTime || '00:00'}`);
+        const bDate = new Date(`${b.date}T${b.startTime || '00:00'}`);
+        return bDate - aDate;
+      });
+
+      const recent = sortedTrips.slice(0, 10);
+
+      if (recent.length === 0) {
+        container.innerHTML = '<p>No trips found for selected filters.</p>';
+        return;
+      }
+
+      recent.forEach(trip => {
+        const el = document.createElement('div');
+        el.classList.add('activity-item');
+        el.innerHTML = `
+          <span>${trip.bookingId || ''}</span> - ${trip.customerName || 'Unknown Customer'}<br>
+          Date: ${trip.date || ''} | Driver: ${trip.driverName || ''} | Vehicle: ${trip.vehicleModel || ''}<br>
+          Amount: ₹${trip.totalAmount || '0'} | Payment: ${trip.paymentStatus || 'N/A'}
+        `;
+        container.appendChild(el);
+      });
+    }
+
+    // Update stats based on filtered trips
+    function updateStats(filteredTrips) {
+      document.getElementById('totalTrips').textContent = filteredTrips.length;
+
+      // Drivers and vehicles count remain total count (can be updated if needed)
+      document.getElementById('totalDrivers').textContent = Object.keys(allDrivers).length;
+      document.getElementById('totalVehicles').textContent = Object.keys(allVehicles).length;
+
+      let pendingPayments = 0;
+      let totalRevenue = 0;
+      filteredTrips.forEach(trip => {
+        if(trip.paymentStatus && trip.paymentStatus.toLowerCase() !== 'paid') pendingPayments++;
+        if(trip.totalAmount) totalRevenue += Number(trip.totalAmount);
+      });
+      document.getElementById('pendingPayments').textContent = pendingPayments;
+      document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
+    }
+
+    // Generate chart data & render charts using Chart.js
+    let revenueChart, tripsPerDriverChart, paymentStatusChart;
+
+    function renderCharts(filteredTrips) {
+      // Prepare revenue by date (monthly)
+      const revenueByMonth = {};
+      filteredTrips.forEach(trip => {
+        if (!trip.date || !trip.totalAmount) return;
+        const month = trip.date.slice(0,7); // yyyy-mm
+        revenueByMonth[month] = (revenueByMonth[month] || 0) + Number(trip.totalAmount);
+      });
+
+      const revenueLabels = Object.keys(revenueByMonth).sort();
+      const revenueData = revenueLabels.map(m => revenueByMonth[m]);
+
+      // Trips per driver
+      const tripsByDriver = {};
+      filteredTrips.forEach(trip => {
+        if (!trip.driverName) return;
+        tripsByDriver[trip.driverName] = (tripsByDriver[trip.driverName] || 0) + 1;
+      });
+      const driverLabels = Object.keys(tripsByDriver);
+      const driverData = driverLabels.map(d => tripsByDriver[d]);
+
+      // Payment status count
+      const paymentStatusCount = {};
+      filteredTrips.forEach(trip => {
+        const status = trip.paymentStatus || "Unknown";
+        paymentStatusCount[status] = (paymentStatusCount[status] || 0) + 1;
+      });
+      const paymentLabels = Object.keys(paymentStatusCount);
+      const paymentData = paymentLabels.map(s => paymentStatusCount[s]);
+
+      // Destroy old charts if exist
+      if (revenueChart) revenueChart.destroy();
+      if (tripsPerDriverChart) tripsPerDriverChart.destroy();
+      if (paymentStatusChart) paymentStatusChart.destroy();
+
+      const ctxRevenue = document.getElementById('revenueChart').getContext('2d');
+      revenueChart = new Chart(ctxRevenue, {
+        type: 'bar',
+        data: {
+          labels: revenueLabels,
+          datasets: [{
+            label: 'Revenue (₹)',
+            data: revenueData,
+            backgroundColor: 'rgba(54, 162, 235, 0.7)'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {legend: {display: false}},
+          scales: {y: {beginAtZero: true}}
+        }
+      });
+
+      const ctxDriver = document.getElementById('tripsPerDriverChart').getContext('2d');
+      tripsPerDriverChart = new Chart(ctxDriver, {
+        type: 'pie',
+        data: {
+          labels: driverLabels,
+          datasets: [{
+            label: 'Trips per Driver',
+            data: driverData,
+            backgroundColor: driverLabels.map(() => 'hsl(' + Math.random()*360 + ', 70%, 60%)')
+          }]
+        },
+        options: {responsive: true}
+      });
+
+      const ctxPayment = document.getElementById('paymentStatusChart').getContext('2d');
+      paymentStatusChart = new Chart(ctxPayment, {
+        type: 'doughnut',
+        data: {
+          labels: paymentLabels,
+          datasets: [{
+            label: 'Payment Status',
+            data: paymentData,
+            backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d']
+          }]
+        },
+        options: {responsive: true}
+      });
+    }
+
+    // Export filtered trips data to Excel
+    function exportExcel(filteredTrips) {
+      if (filteredTrips.length === 0) {
+        alert("No trips data to export.");
+        return;
+      }
+
+      const worksheetData = filteredTrips.map(trip => ({
+        'Trip ID': trip.bookingId,
+        'Date': trip.date,
+        'Duty': trip.duty,
+        'Reference': trip.reference,
+        'Pickup': trip.pickupLocation,
+        'Drop': trip.dropLocation,
+        'Customer Name': trip.customerName,
+        'Customer Number': trip.customerNumber,
+        'Driver Name': trip.driverName,
+        'Driver Number': trip.driverNumber,
+        'Vehicle Model': trip.vehicleModel,
+        'Vehicle Number': trip.vehicleNumber,
+        'Start Time': trip.startTime,
+        'End Time': trip.endTime,
+        'Duration (hrs)': trip.duration,
+        'Start KM': trip.startKm,
+        'End KM': trip.endKm,
+        'Total KM': trip.totalKm,
+        'Total Amount': trip.totalAmount,
+        'Payment Status': trip.paymentStatus
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Trips");
+      XLSX.writeFile(workbook, "NST_Travels_Trips.xlsx");
+    }
+
+    // Export filtered trips data to PDF
+    function exportPDF(filteredTrips) {
+      if (filteredTrips.length === 0) {
+        alert("No trips data to export.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape');
+
+      const columns = [
+        "Trip ID", "Date", "Driver", "Vehicle", "Customer", "Start Time", "End Time",
+        "Duration", "Start KM", "End KM", "Total KM", "Amount", "Payment"
+      ];
+
+      const rows = filteredTrips.map(trip => [
+        trip.bookingId || '',
+        trip.date || '',
+        trip.driverName || '',
+        trip.vehicleModel || '',
+        trip.customerName || '',
+        trip.startTime || '',
+        trip.endTime || '',
+        trip.duration || '',
+        trip.startKm || '',
+        trip.endKm || '',
+        trip.totalKm || '',
+        trip.totalAmount || '',
+        trip.paymentStatus || ''
+      ]);
+
+      doc.setFontSize(14);
+      doc.text("NST Travels - Trips Report", 14, 15);
+      doc.setFontSize(10);
+
+      doc.autoTable({
+        head: [columns],
+        body: rows,
+        startY: 20,
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [0, 123, 255] }
+      });
+
+      doc.save("NST_Travels_Trips_Report.pdf");
+    }
+
+    // Toggle charts visibility
+    document.getElementById('toggleCharts').addEventListener('change', e => {
+      document.getElementById('chartsSection').style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    // Export button event listeners
+    document.getElementById('exportExcelBtn').addEventListener('click', () => {
+      const filteredTrips = filterTrips();
+      exportExcel(filteredTrips);
+    });
+    document.getElementById('exportPdfBtn').addEventListener('click', () => {
+      const filteredTrips = filterTrips();
+      exportPDF(filteredTrips);
+    });
+
+    // Filter change event handlers
+    ['globalSearch', 'filterDriver', 'filterVehicle', 'filterPaymentStatus', 'filterDateStart', 'filterDateEnd'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        const filteredTrips = filterTrips();
+        updateStats(filteredTrips);
+        renderRecentActivity(filteredTrips);
+        renderCharts(filteredTrips);
+      });
+    });
+
+    // Navigation and quick actions
+    document.getElementById('tripsCard').addEventListener('click', () => window.location.href = 'trip-summary.html');
+    document.getElementById('driversCard').addEventListener('click', () => window.location.href = 'drivers-vehicles.html');
+    document.getElementById('vehiclesCard').addEventListener('click', () => window.location.href = 'drivers-vehicles.html');
+    document.getElementById('pendingPaymentsCard').addEventListener('click', () => window.location.href = 'payment-summary.html');
+    document.getElementById('revenueCard').addEventListener('click', () => window.location.href = 'revenue.html');
+
+    document.getElementById('btnAddTrip').addEventListener('click', () => window.location.href = 'trip.html');
+    document.getElementById('btnAddDriver').addEventListener('click', () => window.location.href = 'drivers-vehicles.html#addDriver');
+    document.getElementById('btnAddVehicle').addEventListener('click', () => window.location.href = 'drivers-vehicles.html#addVehicle');
+    document.getElementById('btnAddPayment').addEventListener('click', () => window.location.href = 'payment-summary.html#addPayment');
+
+    // Initialize dashboard
+    async function initDashboard() {
+      await loadAllData();
+      populateFilterOptions();
+
+      const filteredTrips = filterTrips();
+      updateStats(filteredTrips);
+      renderRecentActivity(filteredTrips);
+      renderCharts(filteredTrips);
+    }
+
+    initDashboard();
+  </script>
+  <!-- jsPDF AutoTable plugin -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+</body>
+</html>
