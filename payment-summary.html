@@ -2,60 +2,131 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Payment Summary - NST Travels</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <style>
     body {
-      background-color: #f0f4f8;
-      font-family: "Segoe UI", sans-serif;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: #f3f4f6;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 2rem;
     }
     .table-wrapper {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
       overflow-x: auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
     }
     table {
-      min-width: 1200px;
+      font-size: 0.9rem;
+      width: 100%;
+      min-width: 1000px;
     }
     th, td {
-      vertical-align: middle !important;
+      padding: 12px;
+      text-align: left;
+      vertical-align: middle;
     }
-    .editable-input {
+    th {
+      background-color: #f9fafb;
+      font-weight: 600;
+    }
+    tr {
+      transition: background-color 0.2s ease-in-out;
+    }
+    tr:hover {
+      background-color: #f1f5f9;
+    }
+    .editable-input, .status-select {
       width: 100px;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      border: 1px solid #d1d5db;
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .editable-input:focus, .status-select:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
     }
     .status-select {
       min-width: 140px;
     }
-    .action-btn {
-      margin-right: 8px;
+    .btn {
+      transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
     }
-    .filter-row > * {
-      margin-bottom: 10px;
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    @media (max-width: 640px) {
+      table {
+        font-size: 0.8rem;
+      }
+      .editable-input, .status-select {
+        width: 80px;
+      }
+      .status-select {
+        min-width: 120px;
+      }
+      .btn {
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container py-4">
-    <h3 class="mb-4"><i class="fas fa-money-check-dollar"></i> Payment Summary</h3>
+  <!-- Navigation Bar -->
+  <nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <a href="#" class="text-2xl font-bold text-indigo-600">NST Travels</a>
+        </div>
+        <div class="hidden sm:flex items-center space-x-4">
+          <a href="admin-dashboard.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+          <a href="attendance.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Attendance</a>
+          <a href="driver-dashboard.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Driver Dashboard</a>
+          <a href="drivers-vehicles.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Drivers & Vehicles</a>
+          <a href="payment-summary.html" class="text-indigo-600 font-semibold px-3 py-2 rounded-md text-sm font-medium">Payment Summary</a>
+          <a href="revenue.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Revenue</a>
+          <a href="trip-summary.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Trip Summary</a>
+        </div>
+      </div>
+    </div>
+  </nav>
 
-    <div class="row filter-row g-2 mb-3">
-      <div class="col-md-3">
-        <input type="date" id="startDate" class="form-control" placeholder="Start Date" />
+  <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+    <h3 class="text-2xl font-bold text-gray-900 mb-6"><i class="fas fa-money-check-dollar mr-2"></i> Payment Summary</h3>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div>
+        <input type="date" id="startDate" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Start Date" aria-label="Start Date" />
       </div>
-      <div class="col-md-3">
-        <input type="date" id="endDate" class="form-control" placeholder="End Date" />
+      <div>
+        <input type="date" id="endDate" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="End Date" aria-label="End Date" />
       </div>
-      <div class="col-md-3">
-        <select id="driverFilter" class="form-select">
+      <div>
+        <select id="driverFilter" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Filter by Driver">
           <option value="">All Drivers</option>
         </select>
       </div>
-      <div class="col-md-3">
-        <select id="statusFilter" class="form-select">
+      <div>
+        <select id="statusFilter" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Filter by Status">
           <option value="">All Status</option>
           <option value="Paid">Paid</option>
           <option value="Partially Paid">Partially Paid</option>
@@ -64,41 +135,55 @@
       </div>
     </div>
 
-    <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
-      <button class="btn btn-danger" id="bulkDeleteBtn" disabled><i class="fas fa-trash"></i> Delete Selected</button>
-      <button class="btn btn-outline-primary" id="exportExcelBtn"><i class="fas fa-file-excel"></i> Export to Excel</button>
-      <button class="btn btn-outline-danger" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Export to PDF</button>
+    <div class="flex flex-wrap gap-4 mb-6">
+      <button class="btn bg-red-600 text-white px-6 py-3 rounded-md disabled:bg-red-400 disabled:cursor-not-allowed" id="bulkDeleteBtn" disabled>
+        <i class="fas fa-trash mr-2"></i> Delete Selected
+      </button>
+      <button class="btn bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700" id="exportExcelBtn">
+        <i class="fas fa-file-excel mr-2"></i> Export to Excel
+      </button>
+      <button class="btn bg-red-100 text-red-800 px-6 py-3 rounded-md hover:bg-red-200" id="exportPdfBtn">
+        <i class="fas fa-file-pdf mr-2"></i> Export to PDF
+      </button>
     </div>
 
     <div class="table-wrapper">
-      <table class="table table-hover table-bordered align-middle">
-        <thead class="table-light">
+      <table class="table-auto border-collapse border border-gray-200">
+        <thead>
           <tr>
-            <th><input type="checkbox" id="selectAll"/></th>
-            <th>Booking ID</th>
-            <th>Customer</th>
-            <th>Date</th>
-            <th>Total (₹)</th>
-            <th>Paid (₹)</th>
-            <th>Balance (₹)</th>
-            <th>Status</th>
-            <th>Driver</th>
-            <th>Vehicle</th>
-            <th>Actions</th>
+            <th class="border border-gray-200"><input type="checkbox" id="selectAll" aria-label="Select All" /></th>
+            <th class="border border-gray-200">Booking ID</th>
+            <th class="border border-gray-200">Customer</th>
+            <th class="border border-gray-200">Date</th>
+            <th class="border border-gray-200">Total (₹)</th>
+            <th class="border border-gray-200">Paid (₹)</th>
+            <th class="border border-gray-200">Balance (₹)</th>
+            <th class="border border-gray-200">Status</th>
+            <th class="border border-gray-200">Driver</th>
+            <th class="border border-gray-200">Vehicle</th>
+            <th class="border border-gray-200">Actions</th>
           </tr>
         </thead>
         <tbody id="paymentTableBody">
-          <tr><td colspan="11" class="text-center">Loading...</td></tr>
+          <tr><td colspan="11" class="text-center py-4 text-gray-600">Loading...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- External libs -->
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-6 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <p>© 2025 NST Travels. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- External Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
+  <!-- Existing Scripts -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
@@ -144,7 +229,7 @@
       });
 
       if (filtered.length === 0) {
-        paymentTableBody.innerHTML = "<tr><td colspan='11' class='text-center text-muted'>No records found.</td></tr>";
+        paymentTableBody.innerHTML = "<tr><td colspan='11' class='text-center py-4 text-gray-600'>No records found.</td></tr>";
         return;
       }
 
@@ -160,24 +245,24 @@
       const row = document.createElement("tr");
 
       row.innerHTML = `
-        <td><input type="checkbox" class="rowCheckbox" data-key="${key}"></td>
-        <td>${trip.bookingId || ''}</td>
-        <td>${trip.customerName || ''}</td>
-        <td>${trip.date || ''}</td>
-        <td>${totalAmount.toFixed(2)}</td>
-        <td><input type="number" class="form-control editable-input" value="${paidAmount.toFixed(2)}" id="paid-${key}" min="0" max="${totalAmount}" step="0.01"></td>
-        <td><span id="balance-${key}">${balanceAmount.toFixed(2)}</span></td>
-        <td>
-          <select class="form-select status-select" id="status-${key}">
+        <td class="border border-gray-200"><input type="checkbox" class="rowCheckbox" data-key="${key}" aria-label="Select Row"></td>
+        <td class="border border-gray-200">${trip.bookingId || ''}</td>
+        <td class="border border-gray-200">${trip.customerName || ''}</td>
+        <td class="border border-gray-200">${trip.date || ''}</td>
+        <td class="border border-gray-200">${totalAmount.toFixed(2)}</td>
+        <td class="border border-gray-200"><input type="number" class="editable-input" value="${paidAmount.toFixed(2)}" id="paid-${key}" min="0" max="${totalAmount}" step="0.01" aria-label="Paid Amount"></td>
+        <td class="border border-gray-200"><span id="balance-${key}">${balanceAmount.toFixed(2)}</span></td>
+        <td class="border border-gray-200">
+          <select class="status-select" id="status-${key}" aria-label="Payment Status">
             <option ${trip.paymentStatus === "Paid" ? "selected" : ""}>Paid</option>
             <option ${trip.paymentStatus === "Partially Paid" ? "selected" : ""}>Partially Paid</option>
             <option ${trip.paymentStatus === "Not Paid" ? "selected" : ""}>Not Paid</option>
           </select>
         </td>
-        <td>${trip.driverName || ''}</td>
-        <td>${trip.vehicleModel || ''}</td>
-        <td>
-          <button class="btn btn-sm btn-primary action-btn" onclick="updatePayment('${key}', ${totalAmount})" title="Update Payment">
+        <td class="border border-gray-200">${trip.driverName || ''}</td>
+        <td class="border border-gray-200">${trip.vehicleModel || ''}</td>
+        <td class="border border-gray-200">
+          <button class="btn bg-indigo-600 text-white px-3 py-1 rounded-md hover:bg-indigo-700" onclick="updatePayment('${key}', ${totalAmount})" title="Update Payment" aria-label="Update Payment">
             <i class="fas fa-save"></i>
           </button>
         </td>
@@ -189,7 +274,7 @@
       const paidInput = row.querySelector(`#paid-${key}`);
       paidInput.addEventListener("input", () => {
         let val = paidInput.value;
-        if(val === '') {
+        if (val === '') {
           document.getElementById(`balance-${key}`).innerText = totalAmount.toFixed(2);
           return;
         }
@@ -213,7 +298,7 @@
       onValue(tripRef, (snapshot) => {
         allTrips = [];
         if (!snapshot.exists()) {
-          paymentTableBody.innerHTML = "<tr><td colspan='11' class='text-center text-muted'>No payment data found.</td></tr>";
+          paymentTableBody.innerHTML = "<tr><td colspan='11' class='text-center py-4 text-gray-600'>No payment data found.</td></tr>";
           return;
         }
 
