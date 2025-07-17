@@ -15,7 +15,7 @@
       flex-direction: column;
       background-color: #f3f4f6;
       font-weight: 600;
-      overflow-x: hidden; /* Prevent horizontal scrolling */
+      overflow-x: hidden;
     }
     .container {
       width: 100%;
@@ -72,7 +72,7 @@
     .admin-link {
       position: fixed;
       top: 1.75rem;
-      right: 1rem; /* Reduced to fit within viewport */
+      right: 1rem;
       z-index: 100;
       font-size: 1.125rem;
       font-weight: 700;
@@ -81,23 +81,10 @@
       font-size: 1.125rem;
       font-weight: 600;
     }
-    .date-container {
-      position: relative;
-    }
-    .date-display {
-      cursor: pointer;
-    }
-    .date-input {
-      position: absolute;
-      opacity: 0;
-      width: 100%;
-      height: 100%;
-      cursor: pointer;
-    }
     @media (max-width: 640px) {
       .container {
         padding: 1.5rem;
-        max-width: 100%; /* Ensure container fits viewport */
+        max-width: 100%;
       }
       .input-field, .select-field {
         font-size: 1rem;
@@ -105,7 +92,7 @@
       }
       .btn {
         font-size: 1rem;
-        padding: 0.75rem 1rem; /* Adjusted for touch usability */
+        padding: 0.75rem 1rem;
       }
       .section-heading {
         font-size: 1.5rem;
@@ -118,9 +105,9 @@
       }
       .admin-link {
         font-size: 0.875rem;
-        padding: 0.5rem 0.75rem; /* Tighter padding for mobile */
+        padding: 0.5rem 0.75rem;
         top: 1rem;
-        right: 0.75rem; /* Reduced to avoid overflow */
+        right: 0.75rem;
       }
       .footer-text {
         font-size: 0.875rem;
@@ -129,14 +116,14 @@
         font-size: 1.75rem;
       }
       .nav-container {
-        max-width: 100%; /* Prevent nav overflow */
+        max-width: 100%;
         padding-left: 1rem;
         padding-right: 1rem;
       }
     }
     @media (min-width: 641px) and (max-width: 1023px) {
       .container {
-        max-width: 100%; /* Fit tablet viewport */
+        max-width: 100%;
       }
       .input-field, .select-field {
         font-size: 1.125rem;
@@ -155,7 +142,7 @@
       }
       .admin-link {
         font-size: 1rem;
-        right: 1rem; /* Adjusted for tablet */
+        right: 1rem;
       }
       .footer-text {
         font-size: 1rem;
@@ -168,7 +155,7 @@
     }
     @media (min-width: 1024px) {
       .nav-container {
-        max-width: 1280px; /* Match max-w-7xl */
+        max-width: 1280px;
         padding-left: 2rem;
         padding-right: 2rem;
       }
@@ -203,169 +190,198 @@
     </a>
     <h3 class="text-4xl font-bold text-gray-900 mb-8">🌟 Trip Entry</h3>
     <form id="tripForm" autocomplete="off" class="space-y-8">
-      <!-- Trip Details -->
+      <!-- Trip Type -->
       <div>
-        <h5 class="section-heading">📅 Trip Details</h5>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div>
-            <label for="bookingId" class="form-label block mb-1">Trip ID</label>
-            <input type="text" class="input-field w-full" id="bookingId" readonly aria-label="Trip ID" />
-          </div>
-          <div class="date-container">
-            <label for="formattedDate" class="form-label block mb-1">Date</label>
-            <input type="text" class="input-field w-full date-display" id="formattedDate" readonly aria-label="Formatted Date" placeholder="Select date" />
-            <input type="date" class="date-input" id="date" aria-hidden="true" />
-          </div>
-          <div>
-            <label for="duty" class="form-label block mb-1">Duty</label>
-            <input type="text" class="input-field w-full" id="duty" aria-label="Duty" />
-          </div>
-          <div>
-            <label for="reference" class="form-label block mb-1">Reference</label>
-            <input type="text" class="input-field w-full" id="reference" aria-label="Reference" />
-          </div>
-        </div>
+        <label for="specialType" class="form-label block mb-1">Trip Type</label>
+        <select class="select-field w-full" id="specialType" aria-label="Trip Type">
+          <option value="" selected>Select</option>
+          <option value="Local Trip">Local Trip</option>
+          <option value="One-way Trip">One-way Trip</option>
+          <option value="Round Trip">Round Trip</option>
+          <option value="Outstation Trip">Outstation Trip</option>
+          <option value="Rental Trip">Rental Trip</option>
+          <option value="No Duty">No Duty</option>
+          <option value="Vehicle Service">Vehicle Service</option>
+        </select>
       </div>
-      <!-- Locations -->
+      <!-- Date -->
       <div>
-        <h5 class="section-heading">📍 Locations</h5>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label for="pickupLocation" class="form-label block mb-1">Pickup</label>
-            <input type="text" class="input-field w-full" id="pickupLocation" aria-label="Pickup Location" />
-          </div>
-          <div>
-            <label for="dropLocation" class="form-label block mb-1">Drop</label>
-            <input type="text" class="input-field w-full" id="dropLocation" aria-label="Drop Location" />
-          </div>
-        </div>
+        <label for="date" class="form-label block mb-1">Date</label>
+        <input type="date" class="input-field w-full" id="date" aria-label="Date" />
       </div>
-      <!-- Customer Info -->
-      <div>
-        <h5 class="section-heading">👤 Customer Info</h5>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label for="customerName" class="form-label block mb-1">Name</label>
-            <input type="text" class="input-field w-full" id="customerName" aria-label="Customer Name" />
-          </div>
-          <div>
-            <label for="customerNumber" class="form-label block mb-1">Number</label>
-            <input type="tel" class="input-field w-full" id="customerNumber" pattern="[0-9]{10,15}" aria-label="Customer Number" />
-          </div>
-        </div>
-      </div>
-      <!-- Driver Info -->
-      <div>
-        <h5 class="section-heading">🚖 Driver Info</h5>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label for="driverName" class="form-label block mb-1">Name</label>
-            <select class="select-field w-full" id="driverName" aria-label="Driver Name">
-              <option value="" selected disabled>Select Driver</option>
-            </select>
-          </div>
-          <div>
-            <label for="driverNumber" class="form-label block mb-1">Number</label>
-            <input type="tel" class="input-field w-full" id="driverNumber" readonly aria-label="Driver Number" />
+      <!-- Main Fields (to hide/show) -->
+      <div id="mainFields">
+        <!-- Trip Details -->
+        <div>
+          <h5 class="section-heading">📅 Trip Details</h5>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label for="bookingId" class="form-label block mb-1">Trip ID</label>
+              <input type="text" class="input-field w-full" id="bookingId" readonly aria-label="Trip ID" />
+            </div>
+            <div>
+              <label for="duty" class="form-label block mb-1">Duty</label>
+              <input type="text" class="input-field w-full" id="duty" aria-label="Duty" />
+            </div>
+            <div>
+              <label for="reference" class="form-label block mb-1">Reference</label>
+              <input type="text" class="input-field w-full" id="reference" aria-label="Reference" />
+            </div>
           </div>
         </div>
-      </div>
-      <!-- Vehicle Info -->
-      <div>
-        <h5 class="section-heading">🚗 Vehicle Info</h5>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label for="vehicleModel" class="form-label block mb-1">Model</label>
-            <select class="select-field w-full" id="vehicleModel" aria-label="Vehicle Model">
-              <option value="" selected disabled>Select Vehicle</option>
-            </select>
-          </div>
-          <div>
-            <label for="vehicleNumber" class="form-label block mb-1">Number</label>
-            <input type="text" class="input-field w-full" id="vehicleNumber" readonly aria-label="Vehicle Number" />
+        <!-- Locations -->
+        <div>
+          <h5 class="section-heading">📍 Locations</h5>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label for="pickupLocation" class="form-label block mb-1">Pickup</label>
+              <input type="text" class="input-field w-full" id="pickupLocation" aria-label="Pickup Location" />
+            </div>
+            <div>
+              <label for="dropLocation" class="form-label block mb-1">Drop</label>
+              <input type="text" class="input-field w-full" id="dropLocation" aria-label="Drop Location" />
+            </div>
           </div>
         </div>
-      </div>
-      <!-- Time Details -->
-      <div>
-        <h5 class="section-heading">⏰ Time Details</h5>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div>
-            <label for="startTime" class="form-label block mb-1">Start Time</label>
-            <input type="time" class="input-field w-full" id="startTime" aria-label="Start Time" />
-          </div>
-          <div>
-            <label for="endTime" class="form-label block mb-1">End Time</label>
-            <input type="time" class="input-field w-full" id="endTime" aria-label="End Time" />
-          </div>
-          <div>
-            <label for="duration" class="form-label block mb-1">Duration (hrs)</label>
-            <input type="number" class="input-field w-full" id="duration" readonly aria-label="Duration" />
-          </div>
-          <div>
-            <label for="extraHours" class="form-label block mb-1">Extra Hours</label>
-            <input type="number" class="input-field w-full" id="extraHours" min="0" aria-label="Extra Hours" />
+        <!-- Customer Info -->
+        <div>
+          <h5 class="section-heading">👤 Customer Info</h5>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label for="customerName" class="form-label block mb-1">Name</label>
+              <input type="text" class="input-field w-full" id="customerName" aria-label="Customer Name" />
+            </div>
+            <div>
+              <label for="customerNumber" class="form-label block mb-1">Number</label>
+              <input type="tel" class="input-field w-full" id="customerNumber" pattern="[0-9]{10,15}" aria-label="Customer Number" />
+            </div>
           </div>
         </div>
-      </div>
-      <!-- Distance Details -->
-      <div>
-        <h5 class="section-heading">📏 Distance Details</h5>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div>
-            <label for="startKm" class="form-label block mb-1">Start KM</label>
-            <input type="number" class="input-field w-full" id="startKm" min="0" aria-label="Start KM" />
-          </div>
-          <div>
-            <label for="endKm" class="form-label block mb-1">End KM</label>
-            <input type="number" class="input-field w-full" id="endKm" min="0" aria-label="End KM" />
-          </div>
-          <div>
-            <label for="totalKm" class="form-label block mb-1">Total KM</label>
-            <input type="number" class="input-field w-full" id="totalKm" readonly aria-label="Total KM" />
-          </div>
-          <div>
-            <label for="extraKm" class="form-label block mb-1">Extra KM</label>
-            <input type="number" class="input-field w-full" id="extraKm" min="0" aria-label="Extra KM" />
+        <!-- Driver Info -->
+        <div>
+          <h5 class="section-heading">🚖 Driver Info</h5>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label for="driverName" class="form-label block mb-1">Name</label>
+              <select class="select-field w-full" id="driverName" aria-label="Driver Name">
+                <option value="" selected disabled>Select Driver</option>
+              </select>
+            </div>
+            <div>
+              <label for="driverNumber" class="form-label block mb-1">Number</label>
+              <input type="tel" class="input-field w-full" id="driverNumber" readonly aria-label="Driver Number" />
+            </div>
           </div>
         </div>
-      </div>
-      <!-- Fare Details -->
-      <div>
-        <h5 class="section-heading">💸 Fare Details</h5>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div>
-            <label for="parking" class="form-label block mb-1">Parking (₹)</label>
-            <input type="number" class="input-field w-full" id="parking" min="0" aria-label="Parking" />
-          </div>
-          <div>
-            <label for="toll" class="form-label block mb-1">Toll (₹)</label>
-            <input type="number" class="input-field w-full" id="toll" min="0" aria-label="Toll" />
-          </div>
-          <div>
-            <label for="totalAmount" class="form-label block mb-1">Total Amount (₹)</label>
-            <input type="number" class="input-field w-full" id="totalAmount" min="0" aria-label="Total Amount" />
-          </div>
-          <div>
-            <label for="paymentStatus" class="form-label block mb-1">Payment Status</label>
-            <select class="select-field w-full" id="paymentStatus" aria-label="Payment Status">
-              <option value="" selected disabled>Select</option>
-              <option value="Paid">Paid</option>
-              <option value="Not Paid">Not Paid</option>
-              <option value="Partially Paid">Partially Paid</option>
-            </select>
+        <!-- Vehicle Info (moved here) -->
+        <div>
+          <h5 class="section-heading">🚗 Vehicle Info</h5>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label for="vehicleModel" class="form-label block mb-1">Model</label>
+              <select class="select-field w-full" id="vehicleModel" aria-label="Vehicle Model">
+                <option value="" selected disabled>Select Vehicle</option>
+              </select>
+            </div>
+            <div>
+              <label for="vehicleNumber" class="form-label block mb-1">Number</label>
+              <input type="text" class="input-field w-full" id="vehicleNumber" readonly aria-label="Vehicle Number" />
+            </div>
           </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6" id="paidAmountRow" style="display:none;">
-          <div>
-            <label for="paidAmount" class="form-label block mb-1">Paid Amount (₹)</label>
-            <input type="number" class="input-field w-full" id="paidAmount" min="0" aria-label="Paid Amount" />
+        <!-- Time Details -->
+        <div>
+          <h5 class="section-heading">⏰ Time Details</h5>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div>
+              <label for="startTime" class="form-label block mb-1">Start Time</label>
+              <input type="time" class="input-field w-full" id="startTime" aria-label="Start Time" />
+            </div>
+            <div>
+              <label for="endTime" class="form-label block mb-1">End Time</label>
+              <input type="time" class="input-field w-full" id="endTime" aria-label="End Time" />
+            </div>
+            <div>
+              <label for="duration" class="form-label block mb-1">Duration (hrs)</label>
+              <input type="number" class="input-field w-full" id="duration" step="0.01" aria-label="Duration" />
+            </div>
+            <div>
+              <label for="extraHours" class="form-label block mb-1">Extra Hours</label>
+              <input type="number" class="input-field w-full" id="extraHours" min="0" aria-label="Extra Hours" />
+            </div>
           </div>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6" id="balanceAmountRow" style="display:none;">
-          <div>
-            <label for="balanceAmount" class="form-label block mb-1">Balance Amount (₹)</label>
-            <input type="number" class="input-field w-full" id="balanceAmount" readonly aria-label="Balance Amount" />
+        <!-- Distance Details -->
+        <div>
+          <h5 class="section-heading">📏 Distance Details</h5>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div>
+              <label for="startKm" class="form-label block mb-1">Start KM</label>
+              <input type="number" class="input-field w-full" id="startKm" min="0" aria-label="Start KM" />
+            </div>
+            <div>
+              <label for="endKm" class="form-label block mb-1">End KM</label>
+              <input type="number" class="input-field w-full" id="endKm" min="0" aria-label="End KM" />
+            </div>
+            <div>
+              <label for="totalKm" class="form-label block mb-1">Total KM</label>
+              <input type="number" class="input-field w-full" id="totalKm" readonly aria-label="Total KM" />
+            </div>
+            <div>
+              <label for="extraKm" class="form-label block mb-1">Extra KM</label>
+              <input type="number" class="input-field w-full" id="extraKm" min="0" aria-label="Extra KM" />
+            </div>
+          </div>
+        </div>
+        <!-- Fare Details -->
+        <div>
+          <h5 class="section-heading">💸 Fare Details</h5>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-6">
+            <div>
+              <label for="parking" class="form-label block mb-1">Parking (₹)</label>
+              <input type="number" class="input-field w-full" id="parking" min="0" aria-label="Parking" />
+            </div>
+            <div>
+              <label for="toll" class="form-label block mb-1">Toll (₹)</label>
+              <input type="number" class="input-field w-full" id="toll" min="0" aria-label="Toll" />
+            </div>
+            <div>
+              <label for="permit" class="form-label block mb-1">Permit (₹)</label>
+              <input type="number" class="input-field w-full" id="permit" min="0" aria-label="Permit" />
+            </div>
+            <div>
+              <label for="driverBeta" class="form-label block mb-1">Driver Beta (₹)</label>
+              <input type="number" class="input-field w-full" id="driverBeta" min="0" aria-label="Driver Beta" />
+            </div>
+            <div>
+              <label for="totalAmount" class="form-label block mb-1">Total Amount (₹)</label>
+              <input type="number" class="input-field w-full" id="totalAmount" min="0" aria-label="Total Amount" />
+            </div>
+            <div>
+              <label for="paymentStatus" class="form-label block mb-1">Payment Status</label>
+              <select class="select-field w-full" id="paymentStatus" aria-label="Payment Status">
+                <option value="" selected disabled>Select</option>
+                <option value="Paid">Paid</option>
+                <option value="Not Paid">Not Paid</option>
+                <option value="Partially Paid">Partially Paid</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6" id="paidAmountRow" style="display:none;">
+            <div>
+              <label for="paidAmount" class="form-label block mb-1">Paid Amount (₹)</label>
+              <input type="number" class="input-field w-full" id="paidAmount" min="0" aria-label="Paid Amount" />
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6" id="balanceAmountRow" style="display:none;">
+            <div>
+              <label for="balanceAmount" class="form-label block mb-1">Balance Amount (₹)</label>
+              <input type="number" class="input-field w-full" id="balanceAmount" readonly aria-label="Balance Amount" />
+            </div>
+          </div>
+          <div class="mt-6">
+            <label for="notes" class="form-label block mb-1">Notes</label>
+            <textarea id="notes" class="input-field w-full" rows="2" aria-label="Notes"></textarea>
           </div>
         </div>
       </div>
@@ -399,6 +415,16 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const dbRef = ref(db);
+
+    // Show/hide main fields based on Trip Type
+    document.getElementById("specialType").addEventListener("change", function() {
+      const mainFields = document.getElementById("mainFields");
+      if (this.value === "No Duty" || this.value === "Vehicle Service") {
+        mainFields.style.display = "none";
+      } else {
+        mainFields.style.display = "";
+      }
+    });
 
     function timeToMinutes(t) {
       const [h, m] = t.split(":").map(Number);
@@ -511,10 +537,13 @@
           fields: [
             { key: "parking", label: "Parking", required: false, format: v => `₹${v}` },
             { key: "toll", label: "Toll", required: false, format: v => `₹${v}` },
+            { key: "permit", label: "Permit", required: false, format: v => `₹${v}` },
+            { key: "driverBeta", label: "Driver beta", required: false, format: v => `₹${v}` },
             { key: "totalAmount", label: "Total", required: false, format: v => `₹${v}` },
             { key: "paymentStatus", label: "Payment", required: false },
             { key: "paidAmount", label: "Paid", required: false, format: v => `₹${v}` },
-            { key: "balanceAmount", label: "Balance", required: false, format: v => `₹${v}` }
+            { key: "balanceAmount", label: "Balance", required: false, format: v => `₹${v}` },
+            { key: "notes", label: "Notes", required: false }
           ]
         }
       ];
@@ -608,19 +637,6 @@
         document.getElementById("paymentStatus").addEventListener("change", handlePaymentStatusChange);
         document.getElementById("paidAmount").addEventListener("input", updateBalanceAmount);
         document.getElementById("totalAmount").addEventListener("input", updateBalanceAmount);
-        document.getElementById("date").addEventListener("change", function () {
-          document.getElementById("formattedDate").value = formatDateToCustom(this.value);
-        });
-        document.getElementById("formattedDate").addEventListener("click", function () {
-          document.getElementById("date").showPicker();
-        });
-        const resetFlagRef = ref(db, 'tripResetFlag/');
-        onValue(resetFlagRef, async (snapshot) => {
-          const flag = snapshot.val();
-          if (flag === true || flag === "reset") {
-            document.getElementById("bookingId").value = "#NST001";
-          }
-        });
         handlePaymentStatusChange();
       } catch (error) {
         console.error("Error initializing form:", error);
@@ -631,13 +647,15 @@
     function calcDuration() {
       const start = document.getElementById("startTime").value;
       const end = document.getElementById("endTime").value;
+      const durationInput = document.getElementById("duration");
       if (start && end) {
         let sm = timeToMinutes(start);
         let em = timeToMinutes(end);
         if (em < sm) em += 24 * 60;
-        document.getElementById("duration").value = ((em - sm) / 60).toFixed(2);
+        durationInput.value = ((em - sm) / 60).toFixed(2);
+        durationInput.readOnly = true; // Make readonly when auto-calculated
       } else {
-        document.getElementById("duration").value = "";
+        durationInput.readOnly = false; // Allow manual edit if times are not set
       }
     }
 
@@ -683,8 +701,14 @@
       const form = e.target;
       const driverName = document.getElementById("driverName").value;
       const vehicleModel = document.getElementById("vehicleModel").value;
-      if (!driverName || !vehicleModel) {
-        alert("❌ Please select a driver and vehicle.");
+      if (!vehicleModel) {
+        alert("❌ Please select a vehicle.");
+        return;
+      }
+      // If normal duty, require driver
+      const tripType = document.getElementById("specialType").value;
+      if (tripType !== "No Duty" && tripType !== "Vehicle Service" && !driverName) {
+        alert("❌ Please select a driver.");
         return;
       }
       const data = {
@@ -710,10 +734,13 @@
         extraKm: document.getElementById("extraKm").value,
         parking: document.getElementById("parking").value,
         toll: document.getElementById("toll").value,
+        permit: document.getElementById("permit").value,
+        driverBeta: document.getElementById("driverBeta").value,
         totalAmount: document.getElementById("totalAmount").value,
         paymentStatus: document.getElementById("paymentStatus").value,
         paidAmount: document.getElementById("paidAmount").value || "0",
-        balanceAmount: document.getElementById("balanceAmount").value || "0"
+        balanceAmount: document.getElementById("balanceAmount").value || "0",
+        notes: document.getElementById("notes").value
       };
       try {
         if (await tripIdExists(data.bookingId)) {
@@ -730,7 +757,6 @@
         document.getElementById("vehicleModel").value = "";
         document.getElementById("driverNumber").value = "";
         document.getElementById("vehicleNumber").value = "";
-        document.getElementById("formattedDate").value = "";
         handlePaymentStatusChange();
       } catch (error) {
         console.error("Error saving trip:", error);
