@@ -3,219 +3,426 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Driver Attendance - NST Travels</title>
+  <title>Attendance - NST Travels</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
   <style>
-    body { background: #f8f9fa; font-family: 'Segoe UI', sans-serif; }
-    .container { max-width: 900px; margin-top: 30px; }
-    .status-select { width: 130px; }
-    .vehicle-info { font-style: italic; font-size: 0.9em; color: #555; }
-    .filters { margin-bottom: 15px; }
+    body {
+      background-color: #f4f7fc;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    h2, h3 {
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+    table {
+      font-size: 0.9rem;
+      margin-bottom: 30px;
+    }
+    .status-select {
+      width: 120px;
+    }
+    @media (max-width: 767px) {
+      table {
+        font-size: 0.8rem;
+      }
+      .btn {
+        font-size: 12px;
+        padding: 5px 8px;
+      }
+      .status-select {
+        width: 100px;
+      }
+    }
   </style>
 </head>
 <body>
-<div class="container">
-  <h3>Driver Attendance</h3>
-  <div class="mb-3">
-    <label for="attendanceDate" class="form-label">Select Date:</label>
-    <input type="date" id="attendanceDate" class="form-control" />
-  </div>
+  <div class="container">
+    <h2>📅 Attendance</h2>
 
-  <!-- Filters -->
-  <div class="filters row g-3">
-    <div class="col-md-6">
-      <input type="text" id="filterDriver" class="form-control" placeholder="Filter by Driver Name..." />
+    <div class="row mb-3 g-2">
+      <div class="col-md-3">
+        <input type="date" id="dateFilter" class="form-control" aria-label="Filter by Date" />
+      </div>
+      <div class="col-md-3">
+        <select id="driverFilter" class="form-select" aria-label="Filter by Driver">
+          <option value="">All Drivers</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select id="vehicleFilter" class="form-select" aria-label="Filter by Vehicle">
+          <option value="">All Vehicles</option>
+        </select>
+      </div>
     </div>
-    <div class="col-md-6">
-      <select id="filterStatus" class="form-select">
-        <option value="All">Filter by Attendance Status (All)</option>
-        <option value="Present">Present</option>
-        <option value="Absent">Absent</option>
-        <option value="Leave">Leave</option>
-      </select>
+
+    <h3>Drivers Attendance</h3>
+    <table class="table table-striped table-bordered" id="driverAttendanceTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Name</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="driverAttendanceTableBody">
+        <tr><td colspan="3" class="text-center">Loading...</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Vehicles Attendance</h3>
+    <table class="table table-striped table-bordered" id="vehicleAttendanceTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Name</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="vehicleAttendanceTableBody">
+        <tr><td colspan="3" class="text-center">Loading...</td></tr>
+      </tbody>
+    </table>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-primary" onclick="exportToExcel()">Export to Excel</button>
+      <button class="btn btn-outline-danger" onclick="exportToPDF()">Export to PDF</button>
+      <button class="btn btn-outline-success" onclick="shareViaWhatsApp()">
+        <i class="fa fa-whatsapp"></i> Share via WhatsApp
+      </button>
     </div>
   </div>
 
-  <table class="table table-bordered table-striped">
-    <thead class="table-dark">
-      <tr>
-        <th>Driver Name</th>
-        <th>Mobile Number</th>
-        <th>Attendance Status</th>
-        <th>Vehicle Driven</th>
-      </tr>
-    </thead>
-    <tbody id="attendanceTableBody"></tbody>
-  </table>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-  <div class="mb-3">
-    <button id="saveAttendanceBtn" class="btn btn-primary">Save Attendance</button>
-  </div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
+      authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
+      databaseURL: "https://narayananselvitravels-26dcb-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "narayananselvitravels-26dcb",
+      storageBucket: "narayananselvitravels-26dcb.appspot.com",
+      messagingSenderId: "395599682835",
+      appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
+    };
 
-  <div>
-    <h5>Summary</h5>
-    <p>Present: <span id="presentCount">0</span> | Absent: <span id="absentCount">0</span> | Leave: <span id="leaveCount">0</span></p>
-  </div>
-</div>
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    let allDrivers = [];
+    let allVehicles = [];
+    let attendanceData = {};
+    let allTrips = [];
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
-    authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
-    databaseURL: "https://narayananselvitravels-26dcb-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "narayananselvitravels-26dcb",
-    storageBucket: "narayananselvitravels-26dcb.firebasestorage.app",
-    messagingSenderId: "395599682835",
-    appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
-  };
+    function loadData() {
+      // Set default date to today
+      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      document.getElementById('dateFilter').value = today;
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  const attendanceDateInput = document.getElementById('attendanceDate');
-  const attendanceTableBody = document.getElementById('attendanceTableBody');
-  const saveAttendanceBtn = document.getElementById('saveAttendanceBtn');
-  const presentCountSpan = document.getElementById('presentCount');
-  const absentCountSpan = document.getElementById('absentCount');
-  const leaveCountSpan = document.getElementById('leaveCount');
-
-  const filterDriverInput = document.getElementById('filterDriver');
-  const filterStatusSelect = document.getElementById('filterStatus');
-
-  let drivers = [];
-  let attendanceData = {}; // key: driverId, value: status
-
-  // Load all drivers from Firebase
-  function loadDrivers() {
-    const driversRef = ref(db, 'drivers');
-    onValue(driversRef, (snapshot) => {
-      drivers = [];
-      attendanceTableBody.innerHTML = '';
-      snapshot.forEach(childSnap => {
-        const driver = childSnap.val();
-        driver.id = childSnap.key;
-        drivers.push(driver);
+      // Load drivers
+      onValue(ref(db, 'drivers'), snapshot => {
+        allDrivers = [];
+        snapshot.forEach(child => {
+          allDrivers.push(child.val());
+        });
+        populateFilters();
+        renderTables();
       });
-      renderAttendanceTable();
-    });
-  }
 
-  // Render drivers with attendance select dropdown & vehicle driven column, applying filters
-  async function renderAttendanceTable() {
-    attendanceTableBody.innerHTML = '';
+      // Load vehicles
+      onValue(ref(db, 'vehicles'), snapshot => {
+        allVehicles = [];
+        snapshot.forEach(child => {
+          allVehicles.push(child.val());
+        });
+        populateFilters();
+        renderTables();
+      });
 
-    const selectedDate = attendanceDateInput.value;
-    let tripsData = {};
-    if (selectedDate) {
-      const tripsSnap = await get(ref(db, 'trips'));
-      if (tripsSnap.exists()) {
-        tripsData = tripsSnap.val();
-      }
+      // Load attendance data
+      onValue(ref(db, 'attendance'), snapshot => {
+        attendanceData = snapshot.val() || {};
+        renderTables();
+      });
+
+      // Load trips to determine presence
+      onValue(ref(db, 'trips'), snapshot => {
+        allTrips = [];
+        snapshot.forEach(child => {
+          allTrips.push(child.val());
+        });
+        updateAttendanceFromTrips();
+        renderTables();
+      });
     }
 
-    const driverFilterText = filterDriverInput.value.toLowerCase();
-    const statusFilter = filterStatusSelect.value;
-
-    drivers.forEach(driver => {
-      const attendanceStatus = attendanceData[driver.id] || 'Present';
-
-      // Apply filters
-      if (driver.name.toLowerCase().indexOf(driverFilterText) === -1) return;
-      if (statusFilter !== 'All' && attendanceStatus !== statusFilter) return;
-
-      // Find vehicle driven by this driver on selected date
-      let vehicleInfo = '-';
-      if (attendanceStatus === 'Present' && selectedDate) {
-        for (const key in tripsData) {
-          const trip = tripsData[key];
-          if (trip.date === selectedDate && trip.driverName === driver.name) {
-            vehicleInfo = `${trip.vehicleModel} (${trip.vehicleNumber})`;
-            break;
-          }
+    function updateAttendanceFromTrips() {
+      // Process trips to mark drivers and vehicles as Present
+      allTrips.forEach(trip => {
+        if (trip.date && trip.driverName && trip.vehicleModel) {
+          const date = trip.date;
+          if (!attendanceData[date]) attendanceData[date] = { drivers: {}, vehicles: {} };
+          attendanceData[date].drivers[trip.driverName] = { status: 'Present' };
+          attendanceData[date].vehicles[trip.vehicleModel] = { status: 'Present' };
         }
+      });
+    }
+
+    function populateFilters() {
+      const driverFilter = document.getElementById('driverFilter');
+      driverFilter.innerHTML = '<option value="">All Drivers</option>';
+      allDrivers.forEach(d => {
+        driverFilter.innerHTML += `<option value="${d.name}">${d.name}</option>`;
+      });
+
+      const vehicleFilter = document.getElementById('vehicleFilter');
+      vehicleFilter.innerHTML = '<option value="">All Vehicles</option>';
+      allVehicles.forEach(v => {
+        vehicleFilter.innerHTML += `<option value="${v.model}">${v.model}</option>`;
+      });
+    }
+
+    function renderTables() {
+      const dateFilter = document.getElementById('dateFilter').value;
+      const driverFilter = document.getElementById('driverFilter').value;
+      const vehicleFilter = document.getElementById('vehicleFilter').value;
+
+      // Render Drivers Table
+      const driverTbody = document.getElementById('driverAttendanceTableBody');
+      driverTbody.innerHTML = '';
+      const driverRecords = allDrivers
+        .filter(driver => !driverFilter || driver.name === driverFilter)
+        .map(driver => {
+          const dateData = dateFilter ? attendanceData[dateFilter] : null;
+          const status = dateData?.drivers?.[driver.name]?.status || 'Absent';
+          return { date: dateFilter || '', name: driver.name, status };
+        });
+
+      if (driverRecords.length === 0) {
+        driverTbody.innerHTML = '<tr><td colspan="3" class="text-center">No driver data found</td></tr>';
+      } else {
+        driverRecords.forEach(record => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${record.date || 'N/A'}</td>
+            <td>${record.name}</td>
+            <td>
+              <select class="form-select status-select" data-name="${record.name}" data-type="driver" data-date="${record.date}">
+                <option value="Present" ${record.status === 'Present' ? 'selected' : ''}>Present</option>
+                <option value="Absent" ${record.status === 'Absent' ? 'selected' : ''}>Absent</option>
+              </select>
+            </td>
+          `;
+          driverTbody.appendChild(row);
+        });
       }
 
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${driver.name}</td>
-        <td>${driver.number}</td>
-        <td>
-          <select class="form-select status-select" data-driver-id="${driver.id}">
-            <option value="Present" ${attendanceStatus === 'Present' ? 'selected' : ''}>Present</option>
-            <option value="Absent" ${attendanceStatus === 'Absent' ? 'selected' : ''}>Absent</option>
-            <option value="Leave" ${attendanceStatus === 'Leave' ? 'selected' : ''}>Leave</option>
-          </select>
-        </td>
-        <td class="vehicle-info">${vehicleInfo}</td>
-      `;
-      attendanceTableBody.appendChild(tr);
-    });
+      // Render Vehicles Table
+      const vehicleTbody = document.getElementById('vehicleAttendanceTableBody');
+      vehicleTbody.innerHTML = '';
+      const vehicleRecords = allVehicles
+        .filter(vehicle => !vehicleFilter || vehicle.model === vehicleFilter)
+        .map(vehicle => {
+          const dateData = dateFilter ? attendanceData[dateFilter] : null;
+          const status = dateData?.vehicles?.[vehicle.model]?.status || 'Absent';
+          return { date: dateFilter || '', name: vehicle.model, status };
+        });
 
-    updateSummary();
-  }
+      if (vehicleRecords.length === 0) {
+        vehicleTbody.innerHTML = '<tr><td colspan="3" class="text-center">No vehicle data found</td></tr>';
+      } else {
+        vehicleRecords.forEach(record => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${record.date || 'N/A'}</td>
+            <td>${record.name}</td>
+            <td>
+              <select class="form-select status-select" data-name="${record.name}" data-type="vehicle" data-date="${record.date}">
+                <option value="Present" ${record.status === 'Present' ? 'selected' : ''}>Present</option>
+                <option value="Absent" ${record.status === 'Absent' ? 'selected' : ''}>Absent</option>
+              </select>
+            </td>
+          `;
+          vehicleTbody.appendChild(row);
+        });
+      }
 
-  // Load attendance data for selected date
-  function loadAttendanceForDate(date) {
-    if (!date) return;
-    const attendanceRef = ref(db, `attendance/${date}`);
-    onValue(attendanceRef, (snapshot) => {
-      attendanceData = snapshot.val() || {};
-      renderAttendanceTable();
-    }, { onlyOnce: true });
-  }
+      // Add event listeners for status changes
+      document.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('change', function () {
+          const name = this.dataset.name;
+          const type = this.dataset.type;
+          const date = this.dataset.date;
+          const newStatus = this.value;
 
-  // Save attendance data to Firebase
-  function saveAttendance() {
-    const date = attendanceDateInput.value;
-    if (!date) {
-      alert('Please select a date first.');
-      return;
-    }
-    const updates = {};
-    document.querySelectorAll('.status-select').forEach(select => {
-      const driverId = select.dataset.driverId;
-      updates[driverId] = select.value;
-    });
-    set(ref(db, `attendance/${date}`), updates)
-      .then(() => {
-        alert('Attendance saved successfully!');
-        attendanceData = updates;
-        loadAttendanceForDate(date);
-      })
-      .catch((error) => {
-        alert('Error saving attendance: ' + error.message);
+          if (date) {
+            const path = `attendance/${date}/${type}s/${name}`;
+            set(ref(db, path), { status: newStatus })
+              .then(() => {
+                alert(`Attendance updated to "${newStatus}" for ${type} ${name} on ${date}`);
+              })
+              .catch(error => {
+                alert('Error updating attendance: ' + error.message);
+              });
+          }
+        });
       });
-  }
+    }
 
-  // Update attendance summary counts
-  function updateSummary() {
-    let present = 0, absent = 0, leave = 0;
-    Object.values(attendanceData).forEach(status => {
-      if (status === 'Present') present++;
-      else if (status === 'Absent') absent++;
-      else if (status === 'Leave') leave++;
+    function exportToExcel() {
+      const dateFilter = document.getElementById('dateFilter').value;
+      const driverFilter = document.getElementById('driverFilter').value;
+      const vehicleFilter = document.getElementById('vehicleFilter').value;
+
+      const driverRecords = allDrivers
+        .filter(driver => !driverFilter || driver.name === driverFilter)
+        .map(driver => {
+          const dateData = dateFilter ? attendanceData[dateFilter] : null;
+          const status = dateData?.drivers?.[driver.name]?.status || 'Absent';
+          return { Date: dateFilter || 'N/A', Name: driver.name, Type: 'Driver', Status: status };
+        });
+
+      const vehicleRecords = allVehicles
+        .filter(vehicle => !vehicleFilter || vehicle.model === vehicleFilter)
+        .map(vehicle => {
+          const dateData = dateFilter ? attendanceData[dateFilter] : null;
+          const status = dateData?.vehicles?.[vehicle.model]?.status || 'Absent';
+          return { Date: dateFilter || 'N/A', Name: vehicle.model, Type: 'Vehicle', Status: status };
+        });
+
+      const allRecords = [...driverRecords, ...vehicleRecords];
+
+      if (allRecords.length === 0) {
+        alert('No attendance data to export.');
+        return;
+      }
+
+      const XLSX = window.XLSX;
+      const ws = XLSX.utils.json_to_sheet(allRecords);
+      ws['!cols'] = [{ wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 15 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+      XLSX.writeFile(wb, 'NST_Attendance.xlsx');
+    }
+
+    function exportToPDF() {
+      const dateFilter = document.getElementById('dateFilter').value;
+      const driverFilter = document.getElementById('driverFilter').value;
+      const vehicleFilter = document.getElementById('vehicleFilter').value;
+
+      const driverRecords = allDrivers
+        .filter(driver => !driverFilter || driver.name === driverFilter)
+        .map(driver => {
+          const dateData = dateFilter ? attendanceData[dateFilter] : null;
+          const status = dateData?.drivers?.[driver.name]?.status || 'Absent';
+          return [dateFilter || 'N/A', driver.name, 'Driver', status];
+        });
+
+      const vehicleRecords = allVehicles
+        .filter(vehicle => !vehicleFilter || vehicle.model === vehicleFilter)
+        .map(vehicle => {
+          const dateData = dateFilter ? attendanceData[dateFilter] : null;
+          const status = dateData?.vehicles?.[vehicle.model]?.status || 'Absent';
+          return [dateFilter || 'N/A', vehicle.model, 'Vehicle', status];
+        });
+
+      const allRecords = [...driverRecords, ...vehicleRecords];
+
+      if (allRecords.length === 0) {
+        alert('No attendance data to export.');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text('NST Attendance Report', 14, 15);
+      doc.autoTable({
+        head: [['Date', 'Name', 'Type', 'Status']],
+        body: allRecords,
+        startY: 20,
+        styles: { fontSize: 8 },
+        columnStyles: {
+          0: { cellWidth: 30 },
+          1: { cellWidth: 50 },
+          2: { cellWidth: 30 },
+          3: { cellWidth: 30 }
+        }
+      });
+      doc.save('NST_Attendance.pdf');
+    }
+
+    function shareViaWhatsApp() {
+      const dateFilter = document.getElementById('dateFilter').value;
+      const driverFilter = document.getElementById('driverFilter').value;
+      const vehicleFilter = document.getElementById('vehicleFilter').value;
+
+      const driverRecords = allDrivers
+        .filter(driver => !driverFilter || driver.name === driverFilter)
+        .map(driver => {
+          const dateData = dateFilter ? attendanceData[dateFilter] : null;
+          const status = dateData?.drivers?.[driver.name]?.status || 'Absent';
+          return { Type: 'Driver', Status: status };
+        });
+
+      const vehicleRecords = allVehicles
+        .filter(vehicle => !vehicleFilter || vehicle.model === vehicleFilter)
+        .map(vehicle => {
+          const dateData = dateFilter ? attendanceData[dateFilter] : null;
+          const status = dateData?.vehicles?.[vehicle.model]?.status || 'Absent';
+          return { Type: 'Vehicle', Status: status };
+        });
+
+      const driverCount = driverRecords.length;
+      const vehicleCount = vehicleRecords.length;
+      const presentDrivers = driverRecords.filter(r => r.Status === 'Present').length;
+      const presentVehicles = vehicleRecords.filter(r => r.Status === 'Present').length;
+
+      const message = `
+📅 *NST Attendance Summary*
+
+📅 *Date*: ${dateFilter || 'All'}
+👨‍✈ *Driver Filter*: ${driverFilter || 'All'}
+🚘 *Vehicle Filter*: ${vehicleFilter || 'All'}
+
+📊 *Drivers Attendance*
+• Total Drivers: ${driverCount}
+• Present Drivers: ${presentDrivers}
+• Absent Drivers: ${driverCount - presentDrivers}
+
+📊 *Vehicles Attendance*
+• Total Vehicles: ${vehicleCount}
+• Present Vehicles: ${presentVehicles}
+• Absent Vehicles: ${vehicleCount - presentVehicles}
+      `.trim();
+
+      const url = 'https://wa.me/?text=' + encodeURIComponent(message);
+      window.open(url, '_blank');
+    }
+
+    // Expose functions to global scope for HTML onclick
+    window.exportToExcel = exportToExcel;
+    window.exportToPDF = exportToPDF;
+    window.shareViaWhatsApp = shareViaWhatsApp;
+
+    ['dateFilter', 'driverFilter', 'vehicleFilter'].forEach(id => {
+      document.getElementById(id).addEventListener('change', renderTables);
     });
-    presentCountSpan.textContent = present;
-    absentCountSpan.textContent = absent;
-    leaveCountSpan.textContent = leave;
-  }
 
-  attendanceDateInput.addEventListener('change', () => {
-    loadAttendanceForDate(attendanceDateInput.value);
-  });
+    loadData();
+  </script>
 
-  saveAttendanceBtn.addEventListener('click', saveAttendance);
-
-  filterDriverInput.addEventListener('input', renderAttendanceTable);
-  filterStatusSelect.addEventListener('change', renderAttendanceTable);
-
-  attendanceDateInput.value = new Date().toISOString().slice(0, 10);
-
-  loadDrivers();
-  loadAttendanceForDate(attendanceDateInput.value);
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 </body>
 </html>
