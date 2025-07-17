@@ -15,7 +15,7 @@
       flex-direction: column;
       background-color: #f3f4f6;
       font-weight: 600;
-      overflow-x: hidden;
+      overflow-x: hidden; /* Prevent horizontal scrolling */
     }
     .container {
       width: 100%;
@@ -70,9 +70,12 @@
       font-weight: 600;
     }
     .admin-link {
+      position: fixed;
+      top: 1.75rem;
+      right: 1rem; /* Reduced to fit within viewport */
+      z-index: 100;
       font-size: 1.125rem;
       font-weight: 700;
-      padding: 0.5rem 1rem;
     }
     .footer-text {
       font-size: 1.125rem;
@@ -94,7 +97,7 @@
     @media (max-width: 640px) {
       .container {
         padding: 1.5rem;
-        max-width: 100%;
+        max-width: 100%; /* Ensure container fits viewport */
       }
       .input-field, .select-field {
         font-size: 1rem;
@@ -102,7 +105,7 @@
       }
       .btn {
         font-size: 1rem;
-        padding: 0.75rem 1rem;
+        padding: 0.75rem 1rem; /* Adjusted for touch usability */
       }
       .section-heading {
         font-size: 1.5rem;
@@ -115,7 +118,9 @@
       }
       .admin-link {
         font-size: 0.875rem;
-        padding: 0.5rem 0.75rem;
+        padding: 0.5rem 0.75rem; /* Tighter padding for mobile */
+        top: 1rem;
+        right: 0.75rem; /* Reduced to avoid overflow */
       }
       .footer-text {
         font-size: 0.875rem;
@@ -124,14 +129,14 @@
         font-size: 1.75rem;
       }
       .nav-container {
-        max-width: 100%;
+        max-width: 100%; /* Prevent nav overflow */
         padding-left: 1rem;
         padding-right: 1rem;
       }
     }
     @media (min-width: 641px) and (max-width: 1023px) {
       .container {
-        max-width: 100%;
+        max-width: 100%; /* Fit tablet viewport */
       }
       .input-field, .select-field {
         font-size: 1.125rem;
@@ -150,7 +155,7 @@
       }
       .admin-link {
         font-size: 1rem;
-        padding: 0.5rem 0.75rem;
+        right: 1rem; /* Adjusted for tablet */
       }
       .footer-text {
         font-size: 1rem;
@@ -163,7 +168,7 @@
     }
     @media (min-width: 1024px) {
       .nav-container {
-        max-width: 1280px;
+        max-width: 1280px; /* Match max-w-7xl */
         padding-left: 2rem;
         padding-right: 2rem;
       }
@@ -192,14 +197,10 @@
     </div>
   </nav>
 
-  <!-- Admin Panel Button -->
-  <div class="flex justify-center mb-4 pt-4 px-4 sm:px-6 lg:px-8">
-    <a href="admin-panel.html" class="admin-link btn bg-gray-800 text-white rounded-md hover:bg-gray-900">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <a href="admin-panel.html" class="admin-link btn bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900">
       <i class="fas fa-cog mr-2"></i> Admin Panel
     </a>
-  </div>
-
-  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <h3 class="text-4xl font-bold text-gray-900 mb-8">🌟 Trip Entry</h3>
     <form id="tripForm" autocomplete="off" class="space-y-8">
       <!-- Trip Details -->
@@ -611,14 +612,7 @@
           document.getElementById("formattedDate").value = formatDateToCustom(this.value);
         });
         document.getElementById("formattedDate").addEventListener("click", function () {
-          const dateInput = document.getElementById("date");
-          try {
-            dateInput.showPicker();
-          } catch (error) {
-            console.warn("showPicker failed:", error);
-            dateInput.focus();
-            dateInput.click();
-          }
+          document.getElementById("date").showPicker();
         });
         const resetFlagRef = ref(db, 'tripResetFlag/');
         onValue(resetFlagRef, async (snapshot) => {
