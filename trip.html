@@ -19,19 +19,19 @@
     }
     .container {
       width: 100%;
-      max-width: 800px;
+      max-width: 900px;
       margin: 0 auto;
-      padding: 2rem;
+      padding: 3rem;
       background: white;
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
     .input-field, .select-field {
       width: 100%;
-      padding: 0.75rem;
+      padding: 0.875rem;
       border-radius: 0.5rem;
       border: 1px solid #d1d5db;
-      font-size: 1rem;
+      font-size: 1.25rem;
       font-weight: 600;
       transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
     }
@@ -53,15 +53,15 @@
       opacity: 0.6;
     }
     .section-heading {
-      font-size: 1.5rem;
+      font-size: 1.75rem;
       font-weight: 800;
       color: #1f2937;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.75rem;
       display: flex;
       align-items: center;
     }
     .form-label {
-      font-size: 1rem;
+      font-size: 1.25rem;
       font-weight: 700;
       color: #1f2937;
     }
@@ -70,12 +70,9 @@
       font-weight: 600;
     }
     .admin-link {
-      position: fixed;
-      top: 1.75rem;
-      right: 1rem;
-      z-index: 100;
       font-size: 1.125rem;
       font-weight: 700;
+      padding: 0.5rem 1rem;
     }
     .footer-text {
       font-size: 1.125rem;
@@ -94,44 +91,24 @@
       height: 100%;
       cursor: pointer;
     }
-    .grid {
-      display: grid;
-      gap: 1rem;
-    }
-    .grid-cols-1 {
-      grid-template-columns: 1fr;
-    }
-    @media (min-width: 641px) {
-      .grid-cols-2 {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-    @media (min-width: 1024px) {
-      .grid-cols-3 {
-        grid-template-columns: repeat(3, 1fr);
-      }
-      .grid-cols-4 {
-        grid-template-columns: repeat(4, 1fr);
-      }
-    }
     @media (max-width: 640px) {
       .container {
-        padding: 1rem;
+        padding: 1.5rem;
         max-width: 100%;
       }
       .input-field, .select-field {
-        font-size: 0.875rem;
-        padding: 0.625rem;
+        font-size: 1rem;
+        padding: 0.75rem;
       }
       .btn {
         font-size: 1rem;
-        padding: 0.625rem 1rem;
+        padding: 0.75rem 1rem;
       }
       .section-heading {
-        font-size: 1.25rem;
+        font-size: 1.5rem;
       }
       .form-label {
-        font-size: 0.875rem;
+        font-size: 1rem;
       }
       .nav-link {
         font-size: 1rem;
@@ -139,14 +116,12 @@
       .admin-link {
         font-size: 0.875rem;
         padding: 0.5rem 0.75rem;
-        top: 1rem;
-        right: 0.75rem;
       }
       .footer-text {
         font-size: 0.875rem;
       }
       .brand-text {
-        font-size: 1.5rem;
+        font-size: 1.75rem;
       }
       .nav-container {
         max-width: 100%;
@@ -159,23 +134,23 @@
         max-width: 100%;
       }
       .input-field, .select-field {
-        font-size: 1rem;
+        font-size: 1.125rem;
       }
       .btn {
         font-size: 1.125rem;
       }
       .section-heading {
-        font-size: 1.375rem;
+        font-size: 1.625rem;
       }
       .form-label {
-        font-size: 1rem;
+        font-size: 1.125rem;
       }
       .nav-link {
         font-size: 1.125rem;
       }
       .admin-link {
         font-size: 1rem;
-        right: 1rem;
+        padding: 0.5rem 0.75rem;
       }
       .footer-text {
         font-size: 1rem;
@@ -216,10 +191,15 @@
       </div>
     </div>
   </nav>
-  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <a href="admin-panel.html" class="admin-link btn bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900">
+
+  <!-- Admin Panel Button -->
+  <div class="flex justify-center mb-4 pt-4 px-4 sm:px-6 lg:px-8">
+    <a href="admin-panel.html" class="admin-link btn bg-gray-800 text-white rounded-md hover:bg-gray-900">
       <i class="fas fa-cog mr-2"></i> Admin Panel
     </a>
+  </div>
+
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <h3 class="text-4xl font-bold text-gray-900 mb-8">🌟 Trip Entry</h3>
     <form id="tripForm" autocomplete="off" class="space-y-8">
       <!-- Trip Details -->
@@ -393,15 +373,18 @@
       </button>
     </form>
   </div>
+
   <!-- Footer -->
   <footer class="bg-gray-800 text-white py-6 mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
       <p class="footer-text">© 2025 NST Travels. All rights reserved.</p>
     </div>
   </footer>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, push, set, child, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
     const firebaseConfig = {
       apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
       authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
@@ -411,13 +394,16 @@
       messagingSenderId: "395599682835",
       appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
     };
+
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const dbRef = ref(db);
+
     function timeToMinutes(t) {
       const [h, m] = t.split(":").map(Number);
       return h * 60 + m;
     }
+
     function formatTimeTo12Hour(time) {
       if (!time) return "";
       const [hours, minutes] = time.split(":").map(Number);
@@ -425,6 +411,7 @@
       const adjustedHours = hours % 12 || 12;
       return `${adjustedHours}:${minutes.toString().padStart(2, '0')} ${period}`;
     }
+
     function formatDateToCustom(dateString) {
       if (!dateString) return "";
       const date = new Date(dateString);
@@ -433,6 +420,7 @@
       const year = date.getFullYear();
       return `${day}-${month}-${year}`;
     }
+
     async function generateTripId() {
       try {
         const snap = await get(child(dbRef, 'tripResetFlag'));
@@ -446,6 +434,7 @@
         return "#NST001";
       }
     }
+
     async function tripIdExists(tripId) {
       try {
         const snap = await get(child(dbRef, 'trips'));
@@ -458,6 +447,7 @@
         return false;
       }
     }
+
     function generateWhatsAppMessage(data) {
       const sections = [
         {
@@ -527,6 +517,7 @@
           ]
         }
       ];
+
       let message = `📋 *${data.bookingId} - NST Trip Summary*`;
       
       sections.forEach(section => {
@@ -540,12 +531,15 @@
             const formattedValue = field.format ? field.format(value) : value;
             return `• ${field.label}: ${formattedValue}`;
           });
+
         if (filledFields.length > 0) {
           message += `\n\n${section.heading}\n${filledFields.join('\n')}`;
         }
       });
+
       return message.trim();
     }
+
     async function loadDrivers() {
       try {
         const snap = await get(child(dbRef, 'drivers'));
@@ -569,6 +563,7 @@
         alert("⚠️ Failed to load drivers. Please check your connection.");
       }
     }
+
     async function loadVehicles() {
       try {
         const snap = await get(child(dbRef, 'vehicles'));
@@ -592,6 +587,7 @@
         alert("⚠️ Failed to load vehicles. Please check your connection.");
       }
     }
+
     window.addEventListener("DOMContentLoaded", async () => {
       try {
         document.getElementById("bookingId").value = await generateTripId();
@@ -615,7 +611,14 @@
           document.getElementById("formattedDate").value = formatDateToCustom(this.value);
         });
         document.getElementById("formattedDate").addEventListener("click", function () {
-          document.getElementById("date").showPicker();
+          const dateInput = document.getElementById("date");
+          try {
+            dateInput.showPicker();
+          } catch (error) {
+            console.warn("showPicker failed:", error);
+            dateInput.focus();
+            dateInput.click();
+          }
         });
         const resetFlagRef = ref(db, 'tripResetFlag/');
         onValue(resetFlagRef, async (snapshot) => {
@@ -630,6 +633,7 @@
         alert("⚠️ Failed to initialize form. Please refresh the page.");
       }
     });
+
     function calcDuration() {
       const start = document.getElementById("startTime").value;
       const end = document.getElementById("endTime").value;
@@ -642,6 +646,7 @@
         document.getElementById("duration").value = "";
       }
     }
+
     function calcTotalKm() {
       const sk = parseFloat(document.getElementById("startKm").value);
       const ek = parseFloat(document.getElementById("endKm").value);
@@ -651,6 +656,7 @@
         document.getElementById("totalKm").value = "";
       }
     }
+
     function handlePaymentStatusChange() {
       const status = document.getElementById("paymentStatus").value;
       const paidRow = document.getElementById("paidAmountRow");
@@ -666,6 +672,7 @@
       }
       updateBalanceAmount();
     }
+
     function updateBalanceAmount() {
       const total = parseFloat(document.getElementById("totalAmount").value);
       const paid = parseFloat(document.getElementById("paidAmount").value);
@@ -676,6 +683,7 @@
         document.getElementById("balanceAmount").value = "";
       }
     }
+
     document.getElementById("tripForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const form = e.target;
