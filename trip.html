@@ -79,6 +79,19 @@
       font-size: 1rem;
       font-weight: 600;
     }
+    .date-container {
+      position: relative;
+    }
+    .date-display {
+      cursor: pointer;
+    }
+    .date-input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
     @media (max-width: 640px) {
       .container {
         padding: 1.5rem;
@@ -145,10 +158,10 @@
             <label for="bookingId" class="form-label block mb-1">Trip ID</label>
             <input type="text" class="input-field w-full" id="bookingId" readonly aria-label="Trip ID" />
           </div>
-          <div>
-            <label for="date" class="form-label block mb-1">Date</label>
-            <input type="date" class="input-field w-full" id="date" aria-label="Date" />
-            <input type="text" class="input-field w-full mt-2" id="formattedDate" readonly aria-label="Formatted Date" placeholder="Select date above" />
+          <div class="date-container">
+            <label for="formattedDate" class="form-label block mb-1">Date</label>
+            <input type="text" class="input-field w-full date-display" id="formattedDate" readonly aria-label="Formatted Date" placeholder="Select date" />
+            <input type="date" class="date-input" id="date" aria-hidden="true" />
           </div>
           <div>
             <label for="duty" class="form-label block mb-1">Duty</label>
@@ -544,6 +557,9 @@
         document.getElementById("totalAmount").addEventListener("input", updateBalanceAmount);
         document.getElementById("date").addEventListener("change", function () {
           document.getElementById("formattedDate").value = formatDateToCustom(this.value);
+        });
+        document.getElementById("formattedDate").addEventListener("click", function () {
+          document.getElementById("date").showPicker();
         });
         const resetFlagRef = ref(db, 'tripResetFlag/');
         onValue(resetFlagRef, async (snapshot) => {
