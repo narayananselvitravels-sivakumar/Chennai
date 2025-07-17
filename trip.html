@@ -216,6 +216,22 @@
         <label for="date" class="form-label block mb-1">Date</label>
         <input type="date" class="input-field w-full" id="date" aria-label="Date" />
       </div>
+      <!-- Vehicle Info (ALWAYS VISIBLE) -->
+      <div id="vehicleFields">
+        <h5 class="section-heading">🚗 Vehicle Info</h5>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <label for="vehicleModel" class="form-label block mb-1">Model</label>
+            <select class="select-field w-full" id="vehicleModel" aria-label="Vehicle Model">
+              <option value="" selected disabled>Select Vehicle</option>
+            </select>
+          </div>
+          <div>
+            <label for="vehicleNumber" class="form-label block mb-1">Number</label>
+            <input type="text" class="input-field w-full" id="vehicleNumber" readonly aria-label="Vehicle Number" />
+          </div>
+        </div>
+      </div>
       <!-- Main Fields (to hide/show) -->
       <div id="mainFields">
         <!-- Trip Details -->
@@ -277,22 +293,6 @@
             <div>
               <label for="driverNumber" class="form-label block mb-1">Number</label>
               <input type="tel" class="input-field w-full" id="driverNumber" readonly aria-label="Driver Number" />
-            </div>
-          </div>
-        </div>
-        <!-- Vehicle Info (moved here) -->
-        <div>
-          <h5 class="section-heading">🚗 Vehicle Info</h5>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-              <label for="vehicleModel" class="form-label block mb-1">Model</label>
-              <select class="select-field w-full" id="vehicleModel" aria-label="Vehicle Model">
-                <option value="" selected disabled>Select Vehicle</option>
-              </select>
-            </div>
-            <div>
-              <label for="vehicleNumber" class="form-label block mb-1">Number</label>
-              <input type="text" class="input-field w-full" id="vehicleNumber" readonly aria-label="Vehicle Number" />
             </div>
           </div>
         </div>
@@ -423,21 +423,21 @@
     const db = getDatabase(app);
     const dbRef = ref(db);
 
-    // Show/hide main fields based on Trip Type
-    document.getElementById("specialType").addEventListener("change", function() {
+    function updateFieldVisibility() {
       const mainFields = document.getElementById("mainFields");
-      if (this.value === "No Duty" || this.value === "Vehicle Service") {
+      const tripType = document.getElementById("specialType").value;
+      if (tripType === "No Duty" || tripType === "Vehicle Service") {
         mainFields.style.display = "none";
       } else {
         mainFields.style.display = "";
       }
-    });
+    }
+    document.getElementById("specialType").addEventListener("change", updateFieldVisibility);
 
     function timeToMinutes(t) {
       const [h, m] = t.split(":").map(Number);
       return h * 60 + m;
     }
-
     function formatTimeTo12Hour(time) {
       if (!time) return "";
       const [hours, minutes] = time.split(":").map(Number);
@@ -445,7 +445,6 @@
       const adjustedHours = hours % 12 || 12;
       return `${adjustedHours}:${minutes.toString().padStart(2, '0')} ${period}`;
     }
-
     function formatDateToCustom(dateString) {
       if (!dateString) return "";
       const date = new Date(dateString);
@@ -454,7 +453,6 @@
       const year = date.getFullYear();
       return `${day}-${month}-${year}`;
     }
-
     async function generateTripId() {
       try {
         const snap = await get(child(dbRef, 'tripResetFlag'));
@@ -468,7 +466,6 @@
         return "#NST001";
       }
     }
-
     async function tripIdExists(tripId) {
       try {
         const snap = await get(child(dbRef, 'trips'));
@@ -481,7 +478,6 @@
         return false;
       }
     }
-
     function generateWhatsAppMessage(data) {
       const sections = [
         {
@@ -554,9 +550,7 @@
           ]
         }
       ];
-
       let message = `📋 *${data.bookingId} - NST Trip Summary*`;
-      
       sections.forEach(section => {
         const filledFields = section.fields
           .filter(field => {
@@ -568,15 +562,12 @@
             const formattedValue = field.format ? field.format(value) : value;
             return `• ${field.label}: ${formattedValue}`;
           });
-
         if (filledFields.length > 0) {
           message += `\n\n${section.heading}\n${filledFields.join('\n')}`;
         }
       });
-
       return message.trim();
     }
-
     async function loadDrivers() {
       try {
         const snap = await get(child(dbRef, 'drivers'));
@@ -600,7 +591,6 @@
         alert("⚠️ Failed to load drivers. Please check your connection.");
       }
     }
-
     async function loadVehicles() {
       try {
         const snap = await get(child(dbRef, 'vehicles'));
@@ -624,7 +614,6 @@
         alert("⚠️ Failed to load vehicles. Please check your connection.");
       }
     }
-
     window.addEventListener("DOMContentLoaded", async () => {
       try {
         document.getElementById("bookingId").value = await generateTripId();
@@ -650,7 +639,6 @@
         alert("⚠️ Failed to initialize form. Please refresh the page.");
       }
     });
-
     function calcDuration() {
       const start = document.getElementById("startTime").value;
       const end = document.getElementById("endTime").value;
@@ -665,7 +653,6 @@
         durationInput.readOnly = false; // Allow manual edit if times are not set
       }
     }
-
     function calcTotalKm() {
       const sk = parseFloat(document.getElementById("startKm").value);
       const ek = parseFloat(document.getElementById("endKm").value);
@@ -675,7 +662,6 @@
         document.getElementById("totalKm").value = "";
       }
     }
-
     function handlePaymentStatusChange() {
       const status = document.getElementById("paymentStatus").value;
       const paidRow = document.getElementById("paidAmountRow");
@@ -691,7 +677,6 @@
       }
       updateBalanceAmount();
     }
-
     function updateBalanceAmount() {
       const total = parseFloat(document.getElementById("totalAmount").value);
       const paid = parseFloat(document.getElementById("paidAmount").value);
@@ -702,7 +687,6 @@
         document.getElementById("balanceAmount").value = "";
       }
     }
-
     document.getElementById("tripForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const form = e.target;
