@@ -2,231 +2,373 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NST Travels - Trip Summary</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trip Summary - NST Travels</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
   <style>
     body {
-      padding: 15px;
-      background: #f8f9fa;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: #f3f4f6;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 2rem;
+    }
+    .table-wrapper {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 1.5rem;
+      overflow-x: auto;
     }
     table {
-      table-layout: auto;
-      word-wrap: break-word;
+      font-size: 0.9rem;
+      width: 100%;
+      min-width: 1200px;
     }
-    .modal-lg {
-      max-width: 95% !important;
+    th, td {
+      padding: 12px;
+      text-align: center;
+      vertical-align: middle;
     }
-    @media (max-width: 767px) {
+    th {
+      background-color: #f9fafb;
+      font-weight: 600;
+    }
+    tr {
+      transition: background-color 0.2s ease-in-out;
+    }
+    tr:hover {
+      background-color: #f1f5f9;
+    }
+    .input-field, .select-field {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 0.375rem;
+      border: 1px solid #d1d5db;
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .input-field:focus, .select-field:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+    .btn {
+      transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+    }
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal.show {
+      display: flex;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 8px;
+      max-width: 95%;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+    }
+    .modal-header {
+      background: #4f46e5;
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    .modal-body {
+      padding: 1.5rem;
+    }
+    .modal-footer {
+      padding: 1rem;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    @media (max-width: 640px) {
       table {
-        font-size: 12px;
+        font-size: 0.75rem;
       }
       .btn {
-        font-size: 12px;
-        padding: 5px 8px;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+      }
+      .input-field, .select-field {
+        font-size: 0.8rem;
+      }
+      .modal-content {
+        max-width: 100%;
       }
     }
   </style>
 </head>
 <body>
-  <h2 class="mb-4">NST Travels - Trip Summary</h2>
+  <!-- Navigation Bar -->
+  <nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center">
+          <a href="#" class="text-2xl font-bold text-indigo-600">NST Travels</a>
+        </div>
+        <div class="hidden sm:flex items-center space-x-4">
+          <a href="admin-dashboard.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+          <a href="attendance.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Attendance</a>
+          <a href="driver-dashboard.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Driver Dashboard</a>
+          <a href="drivers-vehicles.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Drivers & Vehicles</a>
+          <a href="payment-summary.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Payment Summary</a>
+          <a href="revenue.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Revenue</a>
+          <a href="trip-summary.html" class="text-indigo-600 font-semibold px-3 py-2 rounded-md text-sm font-medium">Trip Summary</a>
+        </div>
+      </div>
+    </div>
+  </nav>
 
-  <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
-    <select id="driverFilter" class="form-select w-auto" aria-label="Filter by Driver">
-      <option value="">Filter by Driver</option>
-    </select>
-    <select id="vehicleFilter" class="form-select w-auto" aria-label="Filter by Vehicle">
-      <option value="">Filter by Vehicle</option>
-    </select>
-    <input type="date" id="startDate" class="form-control w-auto" aria-label="Start Date" />
-    <input type="date" id="endDate" class="form-control w-auto" aria-label="End Date" />
-    <button id="deleteSelected" class="btn btn-danger" title="Delete Selected">Delete Selected</button>
-    <button id="exportExcel" class="btn btn-success" title="Export to Excel"><i class="fa fa-file-excel"></i> Excel</button>
-    <button id="exportPDF" class="btn btn-danger" title="Export to PDF"><i class="fa fa-file-pdf"></i> PDF</button>
-  </div>
+  <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6"><i class="fas fa-road mr-2"></i> Trip Summary</h2>
 
-  <table class="table table-bordered table-striped table-responsive align-middle" id="tripTable">
-    <thead class="table-dark text-center">
-      <tr>
-        <th><input type="checkbox" id="selectAll" aria-label="Select All Trips" /></th>
-        <th>Trip ID</th>
-        <th>Date</th>
-        <th>Duty</th>
-        <th>Reference</th>
-        <th>Pickup</th>
-        <th>Drop</th>
-        <th>Customer Name</th>
-        <th>Customer Number</th>
-        <th>Driver Name</th>
-        <th>Driver Number</th>
-        <th>Vehicle Model</th>
-        <th>Vehicle Number</th>
-        <th>Start Time</th>
-        <th>End Time</th>
-        <th>Duration (hrs)</th>
-        <th>Extra Hours</th>
-        <th>Start KM</th>
-        <th>End KM</th>
-        <th>Total KM</th>
-        <th>Extra KM</th>
-        <th>Parking (₹)</th>
-        <th>Toll (₹)</th>
-        <th>Total Amount (₹)</th>
-        <th>Payment Status</th>
-        <th>Paid Amount (₹)</th>
-        <th>Balance Amount (₹)</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="tripTableBody" class="text-center"></tbody>
-  </table>
+    <div class="flex flex-wrap gap-4 mb-6">
+      <select id="driverFilter" class="select-field px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Filter by Driver">
+        <option value="">Filter by Driver</option>
+      </select>
+      <select id="vehicleFilter" class="select-field px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Filter by Vehicle">
+        <option value="">Filter by Vehicle</option>
+      </select>
+      <input type="date" id="startDate" class="input-field px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Start Date" />
+      <input type="date" id="endDate" class="input-field px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="End Date" />
+      <button id="deleteSelected" class="btn bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed" title="Delete Selected" aria-label="Delete Selected">
+        <i class="fas fa-trash mr-2"></i> Delete Selected
+      </button>
+      <button id="exportExcel" class="btn bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700" title="Export to Excel" aria-label="Export to Excel">
+        <i class="fas fa-file-excel mr-2"></i> Excel
+      </button>
+      <button id="exportPDF" class="btn bg-red-100 text-red-800 px-6 py-3 rounded-md hover:bg-red-200" title="Export to PDF" aria-label="Export to PDF">
+        <i class="fas fa-file-pdf mr-2"></i> PDF
+      </button>
+    </div>
 
-  <!-- Edit Modal -->
-  <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="table-wrapper">
+      <table class="table-auto border-collapse border border-gray-200" id="tripTable">
+        <thead>
+          <tr>
+            <th class="border border-gray-200"><input type="checkbox" id="selectAll" aria-label="Select All Trips" /></th>
+            <th class="border border-gray-200">Trip ID</th>
+            <th class="border border-gray-200">Date</th>
+            <th class="border border-gray-200">Duty</th>
+            <th class="border border-gray-200">Reference</th>
+            <th class="border border-gray-200">Pickup</th>
+            <th class="border border-gray-200">Drop</th>
+            <th class="border border-gray-200">Customer Name</th>
+            <th class="border border-gray-200">Customer Number</th>
+            <th class="border border-gray-200">Driver Name</th>
+            <th class="border border-gray-200">Driver Number</th>
+            <th class="border border-gray-200">Vehicle Model</th>
+            <th class="border border-gray-200">Vehicle Number</th>
+            <th class="border border-gray-200">Start Time</th>
+            <th class="border border-gray-200">End Time</th>
+            <th class="border border-gray-200">Duration (hrs)</th>
+            <th class="border border-gray-200">Extra Hours</th>
+            <th class="border border-gray-200">Start KM</th>
+            <th class="border border-gray-200">End KM</th>
+            <th class="border border-gray-200">Total KM</th>
+            <th class="border border-gray-200">Extra KM</th>
+            <th class="border border-gray-200">Parking (₹)</th>
+            <th class="border border-gray-200">Toll (₹)</th>
+            <th class="border border-gray-200">Total Amount (₹)</th>
+            <th class="border border-gray-200">Payment Status</th>
+            <th class="border border-gray-200">Paid Amount (₹)</th>
+            <th class="border border-gray-200">Balance Amount (₹)</th>
+            <th class="border border-gray-200">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tripTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
       <div class="modal-content">
         <form id="editForm">
-          <div class="modal-header bg-primary text-white">
+          <div class="modal-header">
             <h5 class="modal-title" id="editModalLabel">Edit Trip</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button type="button" class="modal-close" aria-label="Close">&times;</button>
           </div>
           <div class="modal-body">
-            <div class="row g-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <!-- Trip Details -->
-              <div class="col-md-4">
-                <label for="editBookingId" class="form-label">Trip ID</label>
-                <input type="text" class="form-control" id="editBookingId" readonly required />
+              <div>
+                <label for="editBookingId" class="block text-sm font-medium text-gray-700 mb-1">Trip ID</label>
+                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md" id="editBookingId" readonly required aria-label="Trip ID" />
               </div>
-              <div class="col-md-4">
-                <label for="editDate" class="form-label">Date</label>
-                <input type="date" class="form-control" id="editDate" required />
+              <div>
+                <label for="editDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <input type="date" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editDate" required aria-label="Date" />
               </div>
-              <div class="col-md-4">
-                <label for="editDuty" class="form-label">Duty</label>
-                <input type="text" class="form-control" id="editDuty" />
+              <div>
+                <label for="editDuty" class="block text-sm font-medium text-gray-700 mb-1">Duty</label>
+                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editDuty" aria-label="Duty" />
               </div>
-              <div class="col-md-4">
-                <label for="editReference" class="form-label">Reference</label>
-                <input type="text" class="form-control" id="editReference" />
+              <div>
+                <label for="editReference" class="block text-sm font-medium text-gray-700 mb-1">Reference</label>
+                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editReference" aria-label="Reference" />
               </div>
               <!-- Locations -->
-              <div class="col-md-6">
-                <label for="editPickupLocation" class="form-label">Pickup</label>
-                <input type="text" class="form-control" id="editPickupLocation" required />
+              <div>
+                <label for="editPickupLocation" class="block text-sm font-medium text-gray-700 mb-1">Pickup</label>
+                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editPickupLocation" required aria-label="Pickup Location" />
               </div>
-              <div class="col-md-6">
-                <label for="editDropLocation" class="form-label">Drop</label>
-                <input type="text" class="form-control" id="editDropLocation" required />
+              <div>
+                <label for="editDropLocation" class="block text-sm font-medium text-gray-700 mb-1">Drop</label>
+                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editDropLocation" required aria-label="Drop Location" />
               </div>
               <!-- Customer Info -->
-              <div class="col-md-6">
-                <label for="editCustomerName" class="form-label">Customer Name</label>
-                <input type="text" class="form-control" id="editCustomerName" required />
+              <div>
+                <label for="editCustomerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editCustomerName" required aria-label="Customer Name" />
               </div>
-              <div class="col-md-6">
-                <label for="editCustomerNumber" class="form-label">Customer Number</label>
-                <input type="tel" class="form-control" id="editCustomerNumber" pattern="[0-9]{10,15}" required />
+              <div>
+                <label for="editCustomerNumber" class="block text-sm font-medium text-gray-700 mb-1">Customer Number</label>
+                <input type="tel" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editCustomerNumber" pattern="[0-9]{10,15}" required aria-label="Customer Number" />
               </div>
               <!-- Driver Info -->
-              <div class="col-md-6">
-                <label for="editDriverName" class="form-label">Driver Name</label>
-                <input type="text" class="form-control" id="editDriverName" required />
+              <div>
+                <label for="editDriverName" class="block text-sm font-medium text-gray-700 mb-1">Driver Name</label>
+                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editDriverName" required aria-label="Driver Name" />
               </div>
-              <div class="col-md-6">
-                <label for="editDriverNumber" class="form-label">Driver Number</label>
-                <input type="tel" class="form-control" id="editDriverNumber" pattern="[0-9]{10,15}" required />
+              <div>
+                <label for="editDriverNumber" class="block text-sm font-medium text-gray-700 mb-1">Driver Number</label>
+                <input type="tel" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editDriverNumber" pattern="[0-9]{10,15}" required aria-label="Driver Number" />
               </div>
               <!-- Vehicle Info -->
-              <div class="col-md-6">
-                <label for="editVehicleModel" class="form-label">Vehicle Model</label>
-                <input type="text" class="form-control" id="editVehicleModel" required />
+              <div>
+                <label for="editVehicleModel" class="block text-sm font-medium text-gray-700 mb-1">Vehicle Model</label>
+                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editVehicleModel" required aria-label="Vehicle Model" />
               </div>
-              <div class="col-md-6">
-                <label for="editVehicleNumber" class="form-label">Vehicle Number</label>
-                <input type="text" class="form-control" id="editVehicleNumber" required />
+              <div>
+                <label for="editVehicleNumber" class="block text-sm font-medium text-gray-700 mb-1">Vehicle Number</label>
+                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editVehicleNumber" required aria-label="Vehicle Number" />
               </div>
               <!-- Time Details -->
-              <div class="col-md-3">
-                <label for="editStartTime" class="form-label">Start Time</label>
-                <input type="time" class="form-control" id="editStartTime" required />
+              <div>
+                <label for="editStartTime" class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                <input type="time" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editStartTime" required aria-label="Start Time" />
               </div>
-              <div class="col-md-3">
-                <label for="editEndTime" class="form-label">End Time</label>
-                <input type="time" class="form-control" id="editEndTime" required />
+              <div>
+                <label for="editEndTime" class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                <input type="time" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editEndTime" required aria-label="End Time" />
               </div>
-              <div class="col-md-3">
-                <label for="editDuration" class="form-label">Duration (hrs)</label>
-                <input type="number" class="form-control" id="editDuration" step="0.01" readonly />
+              <div>
+                <label for="editDuration" class="block text-sm font-medium text-gray-700 mb-1">Duration (hrs)</label>
+                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md" id="editDuration" step="0.01" readonly aria-label="Duration" />
               </div>
-              <div class="col-md-3">
-                <label for="editExtraHours" class="form-label">Extra Hours</label>
-                <input type="number" class="form-control" id="editExtraHours" min="0" />
+              <div>
+                <label for="editExtraHours" class="block text-sm font-medium text-gray-700 mb-1">Extra Hours</label>
+                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editExtraHours" min="0" aria-label="Extra Hours" />
               </div>
               <!-- Distance Details -->
-              <div class="col-md-3">
-                <label for="editStartKm" class="form-label">Start KM</label>
-                <input type="number" class="form-control" id="editStartKm" min="0" required />
+              <div>
+                <label for="editStartKm" class="block text-sm font-medium text-gray-700 mb-1">Start KM</label>
+                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editStartKm" min="0" required aria-label="Start KM" />
               </div>
-              <div class="col-md-3">
-                <label for="editEndKm" class="form-label">End KM</label>
-                <input type="number" class="form-control" id="editEndKm" min="0" required />
+              <div>
+                <label for="editEndKm" class="block text-sm font-medium text-gray-700 mb-1">End KM</label>
+                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editEndKm" min="0" required aria-label="End KM" />
               </div>
-              <div class="col-md-3">
-                <label for="editTotalKm" class="form-label">Total KM</label>
-                <input type="number" class="form-control" id="editTotalKm" step="0.1" readonly />
+              <div>
+                <label for="editTotalKm" class="block text-sm font-medium text-gray-700 mb-1">Total KM</label>
+                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md" id="editTotalKm" step="0.1" readonly aria-label="Total KM" />
               </div>
-              <div class="col-md-3">
-                <label for="editExtraKm" class="form-label">Extra KM</label>
-                <input type="number" class="form-control" id="editExtraKm" min="0" />
+              <div>
+                <label for="editExtraKm" class="block text-sm font-medium text-gray-700 mb-1">Extra KM</label>
+                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editExtraKm" min="0" aria-label="Extra KM" />
               </div>
               <!-- Fare Details -->
-              <div class="col-md-4">
-                <label for="editParking" class="form-label">Parking (₹)</label>
-                <input type="number" class="form-control" id="editParking" min="0" />
+              <div>
+                <label for="editParking" class="block text-sm font-medium text-gray-700 mb-1">Parking (₹)</label>
+                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editParking" min="0" aria-label="Parking" />
               </div>
-              <div class="col-md-4">
-                <label for="editToll" class="form-label">Toll (₹)</label>
-                <input type="number" class="form-control" id="editToll" min="0" />
+              <div>
+                <label for="editToll" class="block text-sm font-medium text-gray-700 mb-1">Toll (₹)</label>
+                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editToll" min="0" aria-label="Toll" />
               </div>
-              <div class="col-md-4">
-                <label for="editTotalAmount" class="form-label">Total Amount (₹)</label>
-                <input type="number" class="form-control" id="editTotalAmount" min="0" required />
+              <div>
+                <label for="editTotalAmount" class="block text-sm font-medium text-gray-700 mb-1">Total Amount (₹)</label>
+                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editTotalAmount" min="0" required aria-label="Total Amount" />
               </div>
-              <div class="col-md-4">
-                <label for="editPaymentStatus" class="form-label">Payment Status</label>
-                <select class="form-select" id="editPaymentStatus" required>
-                  <option value="" selected disabled>Select</option>
+              <div>
+                <label for="editPaymentStatus" class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+                <select class="select-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editPaymentStatus" required aria-label="Payment Status">
+                  <option value="" disabled>Select</option>
                   <option value="Paid">Paid</option>
                   <option value="Not Paid">Not Paid</option>
                   <option value="Partially Paid">Partially Paid</option>
                 </select>
               </div>
-              <div class="col-md-4" id="editPaidAmountRow" style="display:none;">
-                <label for="editPaidAmount" class="form-label">Paid Amount (₹)</label>
-                <input type="number" class="form-control" id="editPaidAmount" min="0" />
+              <div id="editPaidAmountRow" style="display:none;">
+                <label for="editPaidAmount" class="block text-sm font-medium text-gray-700 mb-1">Paid Amount (₹)</label>
+                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editPaidAmount" min="0" aria-label="Paid Amount" />
               </div>
-              <div class="col-md-4" id="editBalanceAmountRow" style="display:none;">
-                <label for="editBalanceAmount" class="form-label">Balance Amount (₹)</label>
-                <input type="number" class="form-control" id="editBalanceAmount" readonly />
+              <div id="editBalanceAmountRow" style="display:none;">
+                <label for="editBalanceAmount" class="block text-sm font-medium text-gray-700 mb-1">Balance Amount (₹)</label>
+                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md" id="editBalanceAmount" readonly aria-label="Balance Amount" />
               </div>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="button" class="btn bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 modal-close">Cancel</button>
+            <button type="submit" class="btn bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Save Changes</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-6 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <p>© 2025 NST Travels. All rights reserved.</p>
+    </div>
+  </footer>
+
   <!-- Firebase & Dependencies -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, onValue, remove, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
       authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
@@ -237,7 +379,6 @@
       appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
@@ -257,8 +398,16 @@
     const exportExcelBtn = document.getElementById("exportExcel");
     const exportPDFBtn = document.getElementById("exportPDF");
     const editModalEl = document.getElementById("editModal");
-    const editModal = new bootstrap.Modal(editModalEl);
     const editForm = document.getElementById("editForm");
+
+    // Custom modal handling
+    const editModal = {
+      show: () => editModalEl.classList.add("show"),
+      hide: () => editModalEl.classList.remove("show")
+    };
+    document.querySelectorAll(".modal-close").forEach(btn => {
+      btn.addEventListener("click", () => editModal.hide());
+    });
 
     // Fetch trips from Firebase and listen for changes
     onValue(ref(db, "trips"), (snapshot) => {
@@ -312,50 +461,49 @@
       }
 
       if (filteredTrips.length === 0) {
-        tripTableBody.innerHTML = `<tr><td colspan="28" class="text-center">No trips found.</td></tr>`;
+        tripTableBody.innerHTML = `<tr><td colspan="28" class="text-center py-4 text-gray-600">No trips found.</td></tr>`;
         return;
       }
 
       filteredTrips.forEach((trip) => {
         const row = document.createElement("tr");
-        row.classList.add("align-middle");
         row.innerHTML = `
-          <td><input type="checkbox" class="trip-select" data-key="${trip.key}" aria-label="Select Trip ${trip.bookingId}" /></td>
-          <td>${trip.bookingId || ""}</td>
-          <td>${trip.date || ""}</td>
-          <td>${trip.duty || ""}</td>
-          <td>${trip.reference || ""}</td>
-          <td>${trip.pickupLocation || ""}</td>
-          <td>${trip.dropLocation || ""}</td>
-          <td>${trip.customerName || ""}</td>
-          <td>${trip.customerNumber || ""}</td>
-          <td>${trip.driverName || ""}</td>
-          <td>${trip.driverNumber || ""}</td>
-          <td>${trip.vehicleModel || ""}</td>
-          <td>${trip.vehicleNumber || ""}</td>
-          <td>${formatTime12h(trip.startTime)}</td>
-          <td>${formatTime12h(trip.endTime)}</td>
-          <td>${trip.duration || ""}</td>
-          <td>${trip.extraHours || ""}</td>
-          <td>${trip.startKm || ""}</td>
-          <td>${trip.endKm || ""}</td>
-          <td>${trip.totalKm || ""}</td>
-          <td>${trip.extraKm || ""}</td>
-          <td>${trip.parking || ""}</td>
-          <td>${trip.toll || ""}</td>
-          <td>${trip.totalAmount || ""}</td>
-          <td>${trip.paymentStatus || ""}</td>
-          <td>${trip.paymentStatus === "Paid" || trip.paymentStatus === "Partially Paid" ? (trip.paidAmount || "0") : ""}</td>
-          <td>${trip.paymentStatus === "Partially Paid" ? (trip.balanceAmount || "0") : ""}</td>
-          <td>
-            <button class="btn btn-sm btn-primary me-1 edit-btn" data-key="${trip.key}" aria-label="Edit ${trip.bookingId}">
-              <i class="fa fa-edit"></i>
+          <td class="border border-gray-200"><input type="checkbox" class="trip-select" data-key="${trip.key}" aria-label="Select Trip ${trip.bookingId}" /></td>
+          <td class="border border-gray-200">${trip.bookingId || ""}</td>
+          <td class="border border-gray-200">${trip.date || ""}</td>
+          <td class="border border-gray-200">${trip.duty || ""}</td>
+          <td class="border border-gray-200">${trip.reference || ""}</td>
+          <td class="border border-gray-200">${trip.pickupLocation || ""}</td>
+          <td class="border border-gray-200">${trip.dropLocation || ""}</td>
+          <td class="border border-gray-200">${trip.customerName || ""}</td>
+          <td class="border border-gray-200">${trip.customerNumber || ""}</td>
+          <td class="border border-gray-200">${trip.driverName || ""}</td>
+          <td class="border border-gray-200">${trip.driverNumber || ""}</td>
+          <td class="border border-gray-200">${trip.vehicleModel || ""}</td>
+          <td class="border border-gray-200">${trip.vehicleNumber || ""}</td>
+          <td class="border border-gray-200">${formatTime12h(trip.startTime)}</td>
+          <td class="border border-gray-200">${formatTime12h(trip.endTime)}</td>
+          <td class="border border-gray-200">${trip.duration || ""}</td>
+          <td class="border border-gray-200">${trip.extraHours || ""}</td>
+          <td class="border border-gray-200">${trip.startKm || ""}</td>
+          <td class="border border-gray-200">${trip.endKm || ""}</td>
+          <td class="border border-gray-200">${trip.totalKm || ""}</td>
+          <td class="border border-gray-200">${trip.extraKm || ""}</td>
+          <td class="border border-gray-200">${trip.parking || ""}</td>
+          <td class="border border-gray-200">${trip.toll || ""}</td>
+          <td class="border border-gray-200">${trip.totalAmount || ""}</td>
+          <td class="border border-gray-200">${trip.paymentStatus || ""}</td>
+          <td class="border border-gray-200">${trip.paymentStatus === "Paid" || trip.paymentStatus === "Partially Paid" ? (trip.paidAmount || "0") : ""}</td>
+          <td class="border border-gray-200">${trip.paymentStatus === "Partially Paid" ? (trip.balanceAmount || "0") : ""}</td>
+          <td class="border border-gray-200">
+            <button class="btn bg-indigo-600 text-white px-3 py-1 rounded-md hover:bg-indigo-700 edit-btn" data-key="${trip.key}" aria-label="Edit ${trip.bookingId}">
+              <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-sm btn-danger me-1 delete-btn" data-key="${trip.key}" aria-label="Delete ${trip.bookingId}">
-              <i class="fa fa-trash"></i>
+            <button class="btn bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 delete-btn" data-key="${trip.key}" aria-label="Delete ${trip.bookingId}">
+              <i class="fas fa-trash"></i>
             </button>
-            <button class="btn btn-sm btn-success whatsapp-btn" data-key="${trip.key}" aria-label="Share ${trip.bookingId} via WhatsApp">
-              <i class="fa fa-whatsapp"></i>
+            <button class="btn bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200 whatsapp-btn" data-key="${trip.key}" aria-label="Share ${trip.bookingId} via WhatsApp">
+              <i class="fas fa-whatsapp"></i>
             </button>
           </td>
         `;
@@ -668,7 +816,7 @@
         head: [columns],
         body: rows,
         styles: { fontSize: 7, cellPadding: 3 },
-        headStyles: { fillColor: [22, 160, 133], textColor: 255, fontStyle: "bold" },
+        headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
         theme: "grid",
         margin: { left: 20, right: 20 },
         tableWidth: "auto",
@@ -746,9 +894,6 @@ ${trip.paymentStatus === "Partially Paid" ? `• Balance Amount: ₹${trip.balan
       window.open(url, "_blank");
     }
   </script>
-
-  <!-- Bootstrap JS Bundle -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- jsPDF and jsPDF AutoTable -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
