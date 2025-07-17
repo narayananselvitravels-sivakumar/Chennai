@@ -135,11 +135,11 @@
     <a href="admin-panel.html" class="admin-link btn bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900">
       <i class="fas fa-cog mr-2"></i> Admin Panel
     </a>
-    <h3 class="text-3xl font-bold text-gray-900 mb-8"><i class="fas fa-road mr-2"></i> Trip Entry</h3>
+    <h3 class="text-3xl font-bold text-gray-900 mb-8">🌟 Trip Entry</h3>
     <form id="tripForm" autocomplete="off" class="space-y-8">
       <!-- Trip Details -->
       <div>
-        <h5 class="section-heading"><i class="fas fa-calendar-alt mr-2"></i> Trip Details</h5>
+        <h5 class="section-heading">📅 Trip Details</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div>
             <label for="bookingId" class="form-label block mb-1">Trip ID</label>
@@ -148,6 +148,7 @@
           <div>
             <label for="date" class="form-label block mb-1">Date</label>
             <input type="date" class="input-field w-full" id="date" aria-label="Date" />
+            <input type="text" class="input-field w-full mt-2" id="formattedDate" readonly aria-label="Formatted Date" placeholder="Select date above" />
           </div>
           <div>
             <label for="duty" class="form-label block mb-1">Duty</label>
@@ -161,7 +162,7 @@
       </div>
       <!-- Locations -->
       <div>
-        <h5 class="section-heading"><i class="fas fa-map-marker-alt mr-2"></i> Locations</h5>
+        <h5 class="section-heading">📍 Locations</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label for="pickupLocation" class="form-label block mb-1">Pickup</label>
@@ -175,7 +176,7 @@
       </div>
       <!-- Customer Info -->
       <div>
-        <h5 class="section-heading"><i class="fas fa-user mr-2"></i> Customer Info</h5>
+        <h5 class="section-heading">👤 Customer Info</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label for="customerName" class="form-label block mb-1">Name</label>
@@ -189,7 +190,7 @@
       </div>
       <!-- Driver Info -->
       <div>
-        <h5 class="section-heading"><i class="fas fa-user-tie mr-2"></i> Driver Info</h5>
+        <h5 class="section-heading">🚖 Driver Info</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label for="driverName" class="form-label block mb-1">Name</label>
@@ -205,7 +206,7 @@
       </div>
       <!-- Vehicle Info -->
       <div>
-        <h5 class="section-heading"><i class="fas fa-car mr-2"></i> Vehicle Info</h5>
+        <h5 class="section-heading">🚗 Vehicle Info</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label for="vehicleModel" class="form-label block mb-1">Model</label>
@@ -221,7 +222,7 @@
       </div>
       <!-- Time Details -->
       <div>
-        <h5 class="section-heading"><i class="fas fa-clock mr-2"></i> Time Details</h5>
+        <h5 class="section-heading">⏰ Time Details</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label for="startTime" class="form-label block mb-1">Start Time</label>
@@ -243,7 +244,7 @@
       </div>
       <!-- Distance Details -->
       <div>
-        <h5 class="section-heading"><i class="fas fa-ruler mr-2"></i> Distance Details</h5>
+        <h5 class="section-heading">📏 Distance Details</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label for="startKm" class="form-label block mb-1">Start KM</label>
@@ -265,7 +266,7 @@
       </div>
       <!-- Fare Details -->
       <div>
-        <h5 class="section-heading"><i class="fas fa-money-bill-wave mr-2"></i> Fare Details</h5>
+        <h5 class="section-heading">💸 Fare Details</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label for="parking" class="form-label block mb-1">Parking (₹)</label>
@@ -303,7 +304,7 @@
         </div>
       </div>
       <button type="submit" class="btn bg-green-600 text-white w-full py-4 rounded-md hover:bg-green-700">
-        <i class="fas fa-whatsapp mr-2"></i> Share on WhatsApp
+        <i class="fas fa-whatsapp mr-2"></i> 📲 Share on WhatsApp
       </button>
     </form>
   </div>
@@ -346,6 +347,15 @@
       return `${adjustedHours}:${minutes.toString().padStart(2, '0')} ${period}`;
     }
 
+    function formatDateToCustom(dateString) {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      const day = date.getDate();
+      const month = date.toLocaleString('default', { month: 'long' });
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+
     async function generateTripId() {
       try {
         const snap = await get(child(dbRef, 'tripResetFlag'));
@@ -376,10 +386,10 @@
     function generateWhatsAppMessage(data) {
       const sections = [
         {
-          heading: "🗓 Trip Details",
+          heading: "🌟 Trip Details",
           fields: [
             { key: "bookingId", label: "Trip ID", required: false },
-            { key: "date", label: "Date", required: false },
+            { key: "date", label: "Date", required: false, format: formatDateToCustom },
             { key: "duty", label: "Duty", required: false },
             { key: "reference", label: "Reference", required: false }
           ]
@@ -399,21 +409,21 @@
           ]
         },
         {
-          heading: "👨‍✈ Driver Info",
+          heading: "🚖 Driver Info",
           fields: [
             { key: "driverName", label: "Driver", required: false },
             { key: "driverNumber", label: "Number", required: false }
           ]
         },
         {
-          heading: "🚘 Vehicle Info",
+          heading: "🚗 Vehicle Info",
           fields: [
             { key: "vehicleModel", label: "Vehicle", required: false },
             { key: "vehicleNumber", label: "Number", required: false }
           ]
         },
         {
-          heading: "🕒 Time Details",
+          heading: "⏰ Time Details",
           fields: [
             { key: "startTime", label: "Start Time", required: false, format: formatTimeTo12Hour },
             { key: "endTime", label: "End Time", required: false, format: formatTimeTo12Hour },
@@ -431,7 +441,7 @@
           ]
         },
         {
-          heading: "💰 Fare Details",
+          heading: "💸 Fare Details",
           fields: [
             { key: "parking", label: "Parking", required: false, format: v => `₹${v}` },
             { key: "toll", label: "Toll", required: false, format: v => `₹${v}` },
@@ -532,6 +542,9 @@
         document.getElementById("paymentStatus").addEventListener("change", handlePaymentStatusChange);
         document.getElementById("paidAmount").addEventListener("input", updateBalanceAmount);
         document.getElementById("totalAmount").addEventListener("input", updateBalanceAmount);
+        document.getElementById("date").addEventListener("change", function () {
+          document.getElementById("formattedDate").value = formatDateToCustom(this.value);
+        });
         const resetFlagRef = ref(db, 'tripResetFlag/');
         onValue(resetFlagRef, async (snapshot) => {
           const flag = snapshot.val();
@@ -648,6 +661,7 @@
         document.getElementById("vehicleModel").value = "";
         document.getElementById("driverNumber").value = "";
         document.getElementById("vehicleNumber").value = "";
+        document.getElementById("formattedDate").value = "";
         handlePaymentStatusChange();
       } catch (error) {
         console.error("Error saving trip:", error);
