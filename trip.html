@@ -220,7 +220,6 @@
         <i class="fas fa-whatsapp mr-2"></i> 📲 Share on WhatsApp
       </button>
     </form>
-
     <!-- Mark No Duty / Vehicle Service Section -->
     <div class="mt-12">
       <h4 class="text-2xl font-bold text-gray-800 mb-4">📅 Mark No Duty / Vehicle Service</h4>
@@ -265,7 +264,7 @@
   </footer>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, push, set, child, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, push, set, child, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
@@ -281,9 +280,18 @@
     const db = getDatabase(app);
     const dbRef = ref(db);
 
-    function timeToMinutes(t) {
-      const [h, m] = t.split(":").map(Number);
-      return h * 60 + m;
+    async function generateTripId() {
+      try {
+        const snap = await get(child(dbRef, 'tripResetFlag'));
+        const reset = snap.exists() && (snap.val() === true || snap.val() === "reset");
+        if (reset) return "#NST001";
+        const tripsSnap = await get(child(dbRef, 'trips'));
+        const count = tripsSnap.exists() ? Object.keys(tripsSnap.val()).length + 1 : 1;
+        return `#NST${String(count).padStart(3, '0')}`;
+      } catch (error) {
+        console.error("Error generating trip ID:", error);
+        return "#NST001";
+      }
     }
 
     function formatTimeTo12Hour(time) {
@@ -301,33 +309,6 @@
       const month = date.toLocaleString('default', { month: 'long' });
       const year = date.getFullYear();
       return `${day}-${month}-${year}`;
-    }
-
-    async function generateTripId() {
-      try {
-        const snap = await get(child(dbRef, 'tripResetFlag'));
-        const reset = snap.exists() && (snap.val() === true || snap.val() === "reset");
-        if (reset) return "#NST001";
-        const tripsSnap = await get(child(dbRef, 'trips'));
-        const count = tripsSnap.exists() ? Object.keys(tripsSnap.val()).length + 1 : 1;
-        return `#NST${String(count).padStart(3, '0')}`;
-      } catch (error) {
-        console.error("Error generating trip ID:", error);
-        return "#NST001";
-      }
-    }
-
-    async function tripIdExists(tripId) {
-      try {
-        const snap = await get(child(dbRef, 'trips'));
-        if (snap.exists()) {
-          return Object.values(snap.val()).some(trip => trip.bookingId === tripId);
-        }
-        return false;
-      } catch (error) {
-        console.error("Error checking trip ID:", error);
-        return false;
-      }
     }
 
     function generateWhatsAppMessage(data) {
@@ -420,40 +401,31 @@
     }
 
     window.addEventListener("DOMContentLoaded", async () => {
-      try {
-        document.getElementById("bookingId").value = await generateTripId();
-        await Promise.all([loadDrivers(), loadVehicles(), loadServiceVehicles(), loadNoDutyVehicles()]);
-        document.getElementById("startTime").addEventListener("change", calcDuration);
-        document.getElementById("endTime").addEventListener("change", calcDuration);
-        document.getElementById("startKm").addEventListener("input", calcTotalKm);
-        document.getElementById("endKm").addEventListener("input", calcTotalKm);
-        document.getElementById("driverName").addEventListener("change", function () {
-          const number = this.selectedOptions[0]?.getAttribute("data-number") || "";
-          document.getElementById("driverNumber").value = number;
-        });
-        document.getElementById("vehicleModel").addEventListener("change", function () {
-          const number = this.selectedOptions[0]?.getAttribute("data-number") || "";
-          document.getElementById("vehicleNumber").value = number;
-        });
-        document.getElementById("paymentStatus").addEventListener("change", handlePaymentStatusChange);
-        document.getElementById("paidAmount").addEventListener("input", updateBalanceAmount);
-        document.getElementById("totalAmount").addEventListener("input", updateBalanceAmount);
-        document.getElementById("date").addEventListener("change", function () {
-          document.getElementById("formattedDate").value = formatDateToCustom(this.value);
-        });
-        document.getElementById("formattedDate").addEventListener("click", function () {
-          document.getElementById("date").showPicker();
-        });
-        const resetFlagRef = ref(db, 'tripResetFlag/');
-        onValue(resetFlagRef, async (snapshot) => {
-          const flag = snapshot.val();
-          if (flag === true || flag === "reset") {
-            document.getElementById("bookingId").value = "#NST001";
-          }
-        });
-        handlePaymentStatusChange();
-        loadDayStatusTable();
-      } catch (error) {}
+      document.getElementById("bookingId").value = await generateTripId();
+      await Promise.all([loadDrivers(), loadVehicles(), loadServiceVehicles(), loadNoDutyVehicles()]);
+      document.getElementById("startTime").addEventListener("change", calcDuration);
+      document.getElementById("endTime").addEventListener("change", calcDuration);
+      document.getElementById("startKm").addEventListener("input", calcTotalKm);
+      document.getElementById("endKm").addEventListener("input", calcTotalKm);
+      document.getElementById("driverName").addEventListener("change", function () {
+        const number = this.selectedOptions[0]?.getAttribute("data-number") || "";
+        document.getElementById("driverNumber").value = number;
+      });
+      document.getElementById("vehicleModel").addEventListener("change", function () {
+        const number = this.selectedOptions[0]?.getAttribute("data-number") || "";
+        document.getElementById("vehicleNumber").value = number;
+      });
+      document.getElementById("paymentStatus").addEventListener("change", handlePaymentStatusChange);
+      document.getElementById("paidAmount").addEventListener("input", updateBalanceAmount);
+      document.getElementById("totalAmount").addEventListener("input", updateBalanceAmount);
+      document.getElementById("date").addEventListener("change", function () {
+        document.getElementById("formattedDate").value = formatDateToCustom(this.value);
+      });
+      document.getElementById("formattedDate").addEventListener("click", function () {
+        document.getElementById("date").showPicker();
+      });
+      handlePaymentStatusChange();
+      loadDayStatusTable();
     });
 
     function calcDuration() {
@@ -511,7 +483,6 @@
       const vehicle = document.getElementById("noDutyVehicle").value;
       if (!date) { showStatusMsg("Please select a date.", "red"); return; }
       if (!vehicle) { showStatusMsg("Please select a vehicle.", "red"); return; }
-      if (await hasTripOnDate(date)) { showStatusMsg("Trip already exists for this date. Cannot mark as No Duty.", "red"); return; }
       await set(ref(db, 'dayStatus/' + date), { status: "No Duty", vehicle });
       showStatusMsg("Marked as No Duty for " + formatDateToCustom(date), "green");
       loadDayStatusTable();
@@ -523,7 +494,6 @@
       const notes = document.getElementById("serviceNotes").value.trim();
       if (!date) { showStatusMsg("Please select a date.", "red"); return; }
       if (!vehicle) { showStatusMsg("Please select a vehicle.", "red"); return; }
-      if (await hasTripOnDate(date)) { showStatusMsg("Trip already exists for this date. Cannot mark as Vehicle Service.", "red"); return; }
       await set(ref(db, 'dayStatus/' + date), { status: "Vehicle Service", vehicle, notes });
       showStatusMsg("Marked as Vehicle Service for " + formatDateToCustom(date), "green");
       loadDayStatusTable();
@@ -535,80 +505,6 @@
       el.style.color = color === "green" ? "#16a34a" : "#dc2626";
       setTimeout(() => { el.textContent = ""; }, 4000);
     }
-
-    async function hasTripOnDate(date) {
-      const snap = await get(child(dbRef, 'trips'));
-      if (snap.exists()) {
-        return Object.values(snap.val()).some(trip => trip.date === date);
-      }
-      return false;
-    }
-
-    document.getElementById("tripForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const driverName = document.getElementById("driverName").value;
-      const vehicleModel = document.getElementById("vehicleModel").value;
-      if (!driverName || !vehicleModel) {
-        alert("❌ Please select a driver and vehicle.");
-        return;
-      }
-      const data = {
-        bookingId: document.getElementById("bookingId").value,
-        date: document.getElementById("date").value,
-        duty: document.getElementById("duty").value,
-        reference: document.getElementById("reference").value,
-        pickupLocation: document.getElementById("pickupLocation").value,
-        dropLocation: document.getElementById("dropLocation").value,
-        customerName: document.getElementById("customerName").value,
-        customerNumber: document.getElementById("customerNumber").value,
-        driverName: driverName,
-        driverNumber: document.getElementById("driverNumber").value,
-        vehicleModel: vehicleModel,
-        vehicleNumber: document.getElementById("vehicleNumber").value,
-        startTime: document.getElementById("startTime").value,
-        endTime: document.getElementById("endTime").value,
-        duration: document.getElementById("duration").value,
-        extraHours: document.getElementById("extraHours").value,
-        startKm: document.getElementById("startKm").value,
-        endKm: document.getElementById("endKm").value,
-        totalKm: document.getElementById("totalKm").value,
-        extraKm: document.getElementById("extraKm").value,
-        parking: document.getElementById("parking").value,
-        toll: document.getElementById("toll").value,
-        totalAmount: document.getElementById("totalAmount").value,
-        paymentStatus: document.getElementById("paymentStatus").value,
-        paidAmount: document.getElementById("paidAmount").value || "0",
-        balanceAmount: document.getElementById("balanceAmount").value || "0"
-      };
-      try {
-        if (await tripIdExists(data.bookingId)) {
-          alert("❌ Trip ID already exists. Cannot save.");
-          return;
-        }
-        const dayStatusSnap = await get(child(dbRef, 'dayStatus/' + data.date));
-        if (dayStatusSnap.exists() && dayStatusSnap.val().status !== "Trip") {
-          alert("❌ This date is already marked as '" + dayStatusSnap.val().status + "'. Cannot add trip.");
-          return;
-        }
-        await push(ref(db, "trips/"), data);
-        await set(ref(db, 'dayStatus/' + data.date), { status: "Trip", tripId: data.bookingId });
-        const message = generateWhatsAppMessage(data);
-        const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
-        window.open(url, '_blank');
-        form.reset();
-        document.getElementById("bookingId").value = await generateTripId();
-        document.getElementById("driverName").value = "";
-        document.getElementById("vehicleModel").value = "";
-        document.getElementById("driverNumber").value = "";
-        document.getElementById("vehicleNumber").value = "";
-        document.getElementById("formattedDate").value = "";
-        handlePaymentStatusChange();
-        loadDayStatusTable();
-      } catch (error) {
-        alert("⚠️ Failed to save trip. Please try again.");
-      }
-    });
 
     async function loadDayStatusTable() {
       const tbody = document.getElementById("statusTableBody");
@@ -638,6 +534,53 @@
         `;
       }
     }
+
+    document.getElementById("tripForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      // Get the latest Trip ID just before saving
+      const tripId = await generateTripId();
+      document.getElementById("bookingId").value = tripId;
+
+      const data = {
+        bookingId: tripId,
+        date: document.getElementById("date").value,
+        duty: document.getElementById("duty").value,
+        reference: document.getElementById("reference").value,
+        pickupLocation: document.getElementById("pickupLocation").value,
+        dropLocation: document.getElementById("dropLocation").value,
+        customerName: document.getElementById("customerName").value,
+        customerNumber: document.getElementById("customerNumber").value,
+        driverName: document.getElementById("driverName").value,
+        driverNumber: document.getElementById("driverNumber").value,
+        vehicleModel: document.getElementById("vehicleModel").value,
+        vehicleNumber: document.getElementById("vehicleNumber").value,
+        startTime: document.getElementById("startTime").value,
+        endTime: document.getElementById("endTime").value,
+        duration: document.getElementById("duration").value,
+        extraHours: document.getElementById("extraHours").value,
+        startKm: document.getElementById("startKm").value,
+        endKm: document.getElementById("endKm").value,
+        totalKm: document.getElementById("totalKm").value,
+        extraKm: document.getElementById("extraKm").value,
+        parking: document.getElementById("parking").value,
+        toll: document.getElementById("toll").value,
+        totalAmount: document.getElementById("totalAmount").value,
+        paymentStatus: document.getElementById("paymentStatus").value,
+        paidAmount: document.getElementById("paidAmount").value || "0",
+        balanceAmount: document.getElementById("balanceAmount").value || "0"
+      };
+      try {
+        await push(ref(db, "trips/"), data);
+        const message = generateWhatsAppMessage(data);
+        const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+        e.target.reset();
+        document.getElementById("bookingId").value = await generateTripId();
+        loadDayStatusTable();
+      } catch (error) {
+        alert("⚠️ Failed to save trip. Please try again.");
+      }
+    });
   </script>
 </body>
 </html>
