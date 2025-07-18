@@ -110,27 +110,6 @@
   </style>
 </head>
 <body>
-  <!-- Navigation Bar -->
-  <nav class="bg-white shadow-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="flex items-center">
-          <a href="#" class="text-3xl font-bold text-indigo-600">NST Travels</a>
-        </div>
-        <div class="hidden sm:flex items-center space-x-4">
-          <a href="admin-dashboard.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Dashboard</a>
-          <a href="attendance.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Attendance</a>
-          <a href="driver-dashboard.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Driver Dashboard</a>
-          <a href="drivers-vehicles.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Drivers & Vehicles</a>
-          <a href="payment-summary.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Payment Summary</a>
-          <a href="revenue.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Revenue</a>
-          <a href="trip-summary.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Trip Summary</a>
-          <a href="trip.html" class="nav-link text-indigo-600 font-bold px-3 py-2 rounded-md">Trip Entry</a>
-        </div>
-      </div>
-    </div>
-  </nav>
-
   <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <a href="admin-panel.html" class="admin-link btn bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900">
       <i class="fas fa-cog mr-2"></i> Admin Panel
@@ -306,6 +285,54 @@
         <i class="fas fa-whatsapp mr-2"></i> Share on WhatsApp
       </button>
     </form>
+  </div>
+
+  <!-- Mark Non-Trip Day Section -->
+  <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-8 bg-gray-50 rounded-lg shadow">
+    <h3 class="text-2xl font-bold text-gray-900 mb-4"><i class="fas fa-calendar-times mr-2"></i> Mark Non-Trip Day</h3>
+    <form id="nonTripForm" class="space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label for="nonTripDate" class="form-label block mb-1">Date</label>
+          <input type="date" class="input-field w-full" id="nonTripDate" required />
+        </div>
+        <div>
+          <label for="nonTripStatus" class="form-label block mb-1">Status</label>
+          <select class="select-field w-full" id="nonTripStatus" required>
+            <option value="" selected disabled>Select Status</option>
+            <option value="No Duty">No Duty</option>
+            <option value="Vehicle Service">Vehicle Service</option>
+          </select>
+        </div>
+        <div>
+          <label for="nonTripVehicle" class="form-label block mb-1">Vehicle</label>
+          <select class="select-field w-full" id="nonTripVehicle" required>
+            <option value="" selected disabled>Select Vehicle</option>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn bg-blue-600 text-white w-full py-2 rounded-md hover:bg-blue-700">
+        <i class="fas fa-save mr-2"></i> Save Non-Trip Day
+      </button>
+    </form>
+  </div>
+
+  <!-- Non-Trip Days List Section -->
+  <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-8 bg-gray-50 rounded-lg shadow">
+    <h3 class="text-2xl font-bold text-gray-900 mb-4"><i class="fas fa-list mr-2"></i> Non-Trip Days List</h3>
+    <table class="min-w-full bg-white rounded-lg shadow">
+      <thead>
+        <tr>
+          <th class="px-4 py-2">Date</th>
+          <th class="px-4 py-2">Status</th>
+          <th class="px-4 py-2">Vehicle</th>
+          <th class="px-4 py-2">Number</th>
+        </tr>
+      </thead>
+      <tbody id="nonTripDaysTable">
+        <!-- Entries will be populated here -->
+      </tbody>
+    </table>
   </div>
 
   <!-- Footer -->
@@ -513,10 +540,82 @@
       }
     }
 
+    // Load vehicles for non-trip form
+    async function loadNonTripVehicles() {
+      try {
+        const snap = await get(child(dbRef, 'vehicles'));
+        const select = document.getElementById("nonTripVehicle");
+        select.innerHTML = '<option value="" selected disabled>Select Vehicle</option>';
+        if (snap.exists()) {
+          const data = snap.val();
+          Object.values(data).forEach(v => {
+            const opt = document.createElement("option");
+            opt.value = v.model + "||" + v.number;
+            opt.text = v.model;
+            opt.setAttribute("data-number", v.number || "");
+            select.appendChild(opt);
+          });
+        }
+      } catch (error) {
+        console.error("Error loading vehicles for non-trip:", error);
+      }
+    }
+
+    // Save non-trip day
+    document.getElementById("nonTripForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const date = document.getElementById("nonTripDate").value;
+      const status = document.getElementById("nonTripStatus").value;
+      const vehicleValue = document.getElementById("nonTripVehicle").value;
+      if (!date || !status || !vehicleValue) {
+        alert("Please fill all fields.");
+        return;
+      }
+      const [vehicleModel, vehicleNumber] = vehicleValue.split("||");
+      try {
+        await set(ref(db, `nonTripDays/${date}`), {
+          status,
+          vehicleModel,
+          vehicleNumber
+        });
+        alert("Non-trip day saved!");
+        loadNonTripDays();
+        e.target.reset();
+      } catch (error) {
+        alert("Failed to save non-trip day.");
+      }
+    });
+
+    // Load non-trip days list
+    async function loadNonTripDays() {
+      const tbody = document.getElementById("nonTripDaysTable");
+      tbody.innerHTML = "";
+      try {
+        const snap = await get(child(dbRef, 'nonTripDays'));
+        if (snap.exists()) {
+          const data = snap.val();
+          Object.entries(data).forEach(([date, info]) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td class="border px-4 py-2">${date}</td>
+              <td class="border px-4 py-2">${info.status}</td>
+              <td class="border px-4 py-2">${info.vehicleModel || ""}</td>
+              <td class="border px-4 py-2">${info.vehicleNumber || ""}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = `<tr><td colspan="4" class="text-center px-4 py-2">No entries</td></tr>`;
+        }
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center px-4 py-2">Error loading data</td></tr>`;
+      }
+    }
+
     window.addEventListener("DOMContentLoaded", async () => {
       try {
         document.getElementById("bookingId").value = await generateTripId();
-        await Promise.all([loadDrivers(), loadVehicles()]);
+        await Promise.all([loadDrivers(), loadVehicles(), loadNonTripVehicles()]);
         document.getElementById("startTime").addEventListener("change", calcDuration);
         document.getElementById("endTime").addEventListener("change", calcDuration);
         document.getElementById("startKm").addEventListener("input", calcTotalKm);
@@ -540,6 +639,7 @@
           }
         });
         handlePaymentStatusChange();
+        await loadNonTripDays();
       } catch (error) {
         console.error("Error initializing form:", error);
         alert("⚠️ Failed to initialize form. Please refresh the page.");
