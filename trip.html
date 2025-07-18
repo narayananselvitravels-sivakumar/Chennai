@@ -8,56 +8,202 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
   <style>
-    body { font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; flex-direction: column; background-color: #f3f4f6; font-weight: 600; overflow-x: hidden; }
-    .container { width: 100%; max-width: 900px; margin: 0 auto; padding: 3rem; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); }
-    .input-field, .select-field { width: 100%; padding: 0.875rem; border-radius: 0.5rem; border: 1px solid #d1d5db; font-size: 1.25rem; font-weight: 600; transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
-    .input-field:focus, .select-field:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2); }
-    .btn { font-size: 1.25rem; font-weight: 700; transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out; }
-    .btn:hover:not(:disabled) { transform: translateY(-2px); }
-    .btn:disabled { cursor: not-allowed; opacity: 0.6; }
-    .section-heading { font-size: 1.75rem; font-weight: 800; color: #1f2937; margin-bottom: 1.75rem; display: flex; align-items: center; }
-    .form-label { font-size: 1.25rem; font-weight: 700; color: #1f2937; }
-    .admin-link { position: fixed; top: 1.75rem; right: 1rem; z-index: 100; font-size: 1.125rem; font-weight: 700; }
-    .footer-text { font-size: 1.125rem; font-weight: 600; }
-    .date-container { position: relative; }
-    .date-display { cursor: pointer; }
-    .date-input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
-    .brand-heading { font-size: 2.5rem; font-weight: 800; color: #4f46e5; text-align: center; margin-bottom: 2rem; letter-spacing: 1px; }
-    .status-table th, .status-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid #e5e7eb; text-align: center; }
-    .status-table th { background: #f3f4f6; font-weight: 700; }
-    .status-trip { color: #16a34a; font-weight: 700; }
-    .status-noduty { color: #6b7280; font-weight: 700; }
-    .status-service { color: #dc2626; font-weight: 700; }
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: #f3f4f6;
+      font-weight: 600;
+      overflow-x: hidden; /* Prevent horizontal scrolling */
+    }
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    .input-field, .select-field {
+      width: 100%;
+      padding: 0.875rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      font-size: 1.25rem;
+      font-weight: 600;
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .input-field:focus, .select-field:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+    }
+    .btn {
+      font-size: 1.25rem;
+      font-weight: 700;
+      transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+    }
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+    }
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .section-heading {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #1f2937;
+      margin-bottom: 1.75rem;
+      display: flex;
+      align-items: center;
+    }
+    .form-label {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+    .nav-link {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .admin-link {
+      position: fixed;
+      top: 1.75rem;
+      right: 1rem; /* Reduced to fit within viewport */
+      z-index: 100;
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+    .footer-text {
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+    .date-container {
+      position: relative;
+    }
+    .date-display {
+      cursor: pointer;
+    }
+    .date-input {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
     @media (max-width: 640px) {
-      .container { padding: 1.5rem; max-width: 100%; }
-      .input-field, .select-field { font-size: 1rem; padding: 0.75rem; }
-      .btn { font-size: 1rem; padding: 0.75rem 1rem; }
-      .section-heading { font-size: 1.5rem; }
-      .form-label { font-size: 1rem; }
-      .admin-link { font-size: 0.875rem; padding: 0.5rem 0.75rem; top: 1rem; right: 0.75rem; }
-      .footer-text { font-size: 0.875rem; }
-      .brand-heading { font-size: 2rem; }
+      .container {
+        padding: 1.5rem;
+        max-width: 100%; /* Ensure container fits viewport */
+      }
+      .input-field, .select-field {
+        font-size: 1rem;
+        padding: 0.75rem;
+      }
+      .btn {
+        font-size: 1rem;
+        padding: 0.75rem 1rem; /* Adjusted for touch usability */
+      }
+      .section-heading {
+        font-size: 1.5rem;
+      }
+      .form-label {
+        font-size: 1rem;
+      }
+      .nav-link {
+        font-size: 1rem;
+      }
+      .admin-link {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem; /* Tighter padding for mobile */
+        top: 1rem;
+        right: 0.75rem; /* Reduced to avoid overflow */
+      }
+      .footer-text {
+        font-size: 0.875rem;
+      }
+      .brand-text {
+        font-size: 1.75rem;
+      }
+      .nav-container {
+        max-width: 100%; /* Prevent nav overflow */
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
     }
     @media (min-width: 641px) and (max-width: 1023px) {
-      .container { max-width: 100%; }
-      .input-field, .select-field { font-size: 1.125rem; }
-      .btn { font-size: 1.125rem; }
-      .section-heading { font-size: 1.625rem; }
-      .form-label { font-size: 1.125rem; }
-      .admin-link { font-size: 1rem; right: 1rem; }
-      .footer-text { font-size: 1rem; }
-      .brand-heading { font-size: 2.25rem; }
+      .container {
+        max-width: 100%; /* Fit tablet viewport */
+      }
+      .input-field, .select-field {
+        font-size: 1.125rem;
+      }
+      .btn {
+        font-size: 1.125rem;
+      }
+      .section-heading {
+        font-size: 1.625rem;
+      }
+      .form-label {
+        font-size: 1.125rem;
+      }
+      .nav-link {
+        font-size: 1.125rem;
+      }
+      .admin-link {
+        font-size: 1rem;
+        right: 1rem; /* Adjusted for tablet */
+      }
+      .footer-text {
+        font-size: 1rem;
+      }
+      .nav-container {
+        max-width: 100%;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+      }
+    }
+    @media (min-width: 1024px) {
+      .nav-container {
+        max-width: 1280px; /* Match max-w-7xl */
+        padding-left: 2rem;
+        padding-right: 2rem;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- Navigation Bar -->
+  <nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="nav-container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-20">
+        <div class="flex items-center">
+          <a href="#" class="brand-text text-4xl font-bold text-indigo-600">NST Travels</a>
+        </div>
+        <div class="hidden sm:flex items-center space-x-4">
+          <a href="admin-dashboard.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Dashboard</a>
+          <a href="attendance.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Attendance</a>
+          <a href="driver-dashboard.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Driver Dashboard</a>
+          <a href="drivers-vehicles.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Drivers & Vehicles</a>
+          <a href="payment-summary.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Payment Summary</a>
+          <a href="revenue.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Revenue</a>
+          <a href="trip-summary.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Trip Summary</a>
+          <a href="trip.html" class="nav-link text-indigo-600 font-bold px-3 py-2 rounded-md">Trip Entry</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
   <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="brand-heading">NST Travels</div>
     <a href="admin-panel.html" class="admin-link btn bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900">
       <i class="fas fa-cog mr-2"></i> Admin Panel
     </a>
     <h3 class="text-4xl font-bold text-gray-900 mb-8">🌟 Trip Entry</h3>
     <form id="tripForm" autocomplete="off" class="space-y-8">
+      <!-- Trip Details -->
       <div>
         <h5 class="section-heading">📅 Trip Details</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -80,6 +226,7 @@
           </div>
         </div>
       </div>
+      <!-- Locations -->
       <div>
         <h5 class="section-heading">📍 Locations</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -93,6 +240,7 @@
           </div>
         </div>
       </div>
+      <!-- Customer Info -->
       <div>
         <h5 class="section-heading">👤 Customer Info</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -106,6 +254,7 @@
           </div>
         </div>
       </div>
+      <!-- Driver Info -->
       <div>
         <h5 class="section-heading">🚖 Driver Info</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -121,6 +270,7 @@
           </div>
         </div>
       </div>
+      <!-- Vehicle Info -->
       <div>
         <h5 class="section-heading">🚗 Vehicle Info</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -136,6 +286,7 @@
           </div>
         </div>
       </div>
+      <!-- Time Details -->
       <div>
         <h5 class="section-heading">⏰ Time Details</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -157,6 +308,7 @@
           </div>
         </div>
       </div>
+      <!-- Distance Details -->
       <div>
         <h5 class="section-heading">📏 Distance Details</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -178,6 +330,7 @@
           </div>
         </div>
       </div>
+      <!-- Fare Details -->
       <div>
         <h5 class="section-heading">💸 Fare Details</h5>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -220,51 +373,18 @@
         <i class="fas fa-whatsapp mr-2"></i> 📲 Share on WhatsApp
       </button>
     </form>
-    <!-- Mark No Duty / Vehicle Service Section -->
-    <div class="mt-12">
-      <h4 class="text-2xl font-bold text-gray-800 mb-4">📅 Mark No Duty / Vehicle Service</h4>
-      <div class="flex flex-col sm:flex-row gap-4 mb-4">
-        <input type="date" id="statusDate" class="input-field w-full sm:w-auto" />
-        <select id="noDutyVehicle" class="select-field w-full sm:w-48">
-          <option value="" selected disabled>Select Vehicle (for No Duty)</option>
-        </select>
-        <button id="markNoDutyBtn" class="btn bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">Mark as No Duty</button>
-        <select id="serviceVehicle" class="select-field w-full sm:w-48">
-          <option value="" selected disabled>Select Vehicle (for Service)</option>
-        </select>
-        <input type="text" id="serviceNotes" class="input-field w-full sm:w-64" placeholder="Service Notes" />
-        <button id="markServiceBtn" class="btn bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">Mark as Vehicle Service</button>
-      </div>
-      <div id="statusMsg" class="text-sm font-semibold mb-4"></div>
-      <div>
-        <h5 class="text-xl font-bold text-gray-700 mb-2">Marked Dates Status</h5>
-        <div class="overflow-x-auto">
-          <table class="status-table w-full text-sm bg-white rounded shadow">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Trip ID</th>
-                <th>Vehicle</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody id="statusTableBody">
-              <!-- Filled by JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
   </div>
+
+  <!-- Footer -->
   <footer class="bg-gray-800 text-white py-6 mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
       <p class="footer-text">© 2025 NST Travels. All rights reserved.</p>
     </div>
   </footer>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, push, set, child, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, push, set, child, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
@@ -280,18 +400,9 @@
     const db = getDatabase(app);
     const dbRef = ref(db);
 
-    async function generateTripId() {
-      try {
-        const snap = await get(child(dbRef, 'tripResetFlag'));
-        const reset = snap.exists() && (snap.val() === true || snap.val() === "reset");
-        if (reset) return "#NST001";
-        const tripsSnap = await get(child(dbRef, 'trips'));
-        const count = tripsSnap.exists() ? Object.keys(tripsSnap.val()).length + 1 : 1;
-        return `#NST${String(count).padStart(3, '0')}`;
-      } catch (error) {
-        console.error("Error generating trip ID:", error);
-        return "#NST001";
-      }
+    function timeToMinutes(t) {
+      const [h, m] = t.split(":").map(Number);
+      return h * 60 + m;
     }
 
     function formatTimeTo12Hour(time) {
@@ -311,22 +422,122 @@
       return `${day}-${month}-${year}`;
     }
 
+    async function generateTripId() {
+      try {
+        const snap = await get(child(dbRef, 'tripResetFlag'));
+        const reset = snap.exists() && (snap.val() === true || snap.val() === "reset");
+        if (reset) return "#NST001";
+        const tripsSnap = await get(child(dbRef, 'trips'));
+        const count = tripsSnap.exists() ? Object.keys(tripsSnap.val()).length + 1 : 1;
+        return `#NST${String(count).padStart(3, '0')}`;
+      } catch (error) {
+        console.error("Error generating trip ID:", error);
+        return "#NST001";
+      }
+    }
+
+    async function tripIdExists(tripId) {
+      try {
+        const snap = await get(child(dbRef, 'trips'));
+        if (snap.exists()) {
+          return Object.values(snap.val()).some(trip => trip.bookingId === tripId);
+        }
+        return false;
+      } catch (error) {
+        console.error("Error checking trip ID:", error);
+        return false;
+      }
+    }
+
     function generateWhatsAppMessage(data) {
+      const sections = [
+        {
+          heading: "🌟 Trip Details",
+          fields: [
+            { key: "bookingId", label: "Trip ID", required: false },
+            { key: "date", label: "Date", required: false, format: formatDateToCustom },
+            { key: "duty", label: "Duty", required: false },
+            { key: "reference", label: "Reference", required: false }
+          ]
+        },
+        {
+          heading: "📍 Locations",
+          fields: [
+            { key: "pickupLocation", label: "Pickup", required: false },
+            { key: "dropLocation", label: "Drop", required: false }
+          ]
+        },
+        {
+          heading: "👤 Customer Info",
+          fields: [
+            { key: "customerName", label: "Customer", required: false },
+            { key: "customerNumber", label: "Number", required: false }
+          ]
+        },
+        {
+          heading: "🚖 Driver Info",
+          fields: [
+            { key: "driverName", label: "Driver", required: false },
+            { key: "driverNumber", label: "Number", required: false }
+          ]
+        },
+        {
+          heading: "🚗 Vehicle Info",
+          fields: [
+            { key: "vehicleModel", label: "Vehicle", required: false },
+            { key: "vehicleNumber", label: "Number", required: false }
+          ]
+        },
+        {
+          heading: "⏰ Time Details",
+          fields: [
+            { key: "startTime", label: "Start Time", required: false, format: formatTimeTo12Hour },
+            { key: "endTime", label: "End Time", required: false, format: formatTimeTo12Hour },
+            { key: "duration", label: "Duration", required: false, format: v => `${v} hrs` },
+            { key: "extraHours", label: "Extra Hours", required: false }
+          ]
+        },
+        {
+          heading: "📏 Distance Details",
+          fields: [
+            { key: "startKm", label: "Start KM", required: false },
+            { key: "endKm", label: "End KM", required: false },
+            { key: "totalKm", label: "Total KM", required: false, format: v => `${v} km` },
+            { key: "extraKm", label: "Extra KM", required: false }
+          ]
+        },
+        {
+          heading: "💸 Fare Details",
+          fields: [
+            { key: "parking", label: "Parking", required: false, format: v => `₹${v}` },
+            { key: "toll", label: "Toll", required: false, format: v => `₹${v}` },
+            { key: "totalAmount", label: "Total", required: false, format: v => `₹${v}` },
+            { key: "paymentStatus", label: "Payment", required: false },
+            { key: "paidAmount", label: "Paid", required: false, format: v => `₹${v}` },
+            { key: "balanceAmount", label: "Balance", required: false, format: v => `₹${v}` }
+          ]
+        }
+      ];
+
       let message = `📋 *${data.bookingId} - NST Trip Summary*`;
-      message += `\n\n🌟 Trip Details\n• Trip ID: ${data.bookingId}\n• Date: ${formatDateToCustom(data.date)}\n• Duty: ${data.duty}\n• Reference: ${data.reference}`;
-      message += `\n\n📍 Locations\n• Pickup: ${data.pickupLocation}\n• Drop: ${data.dropLocation}`;
-      message += `\n\n👤 Customer Info\n• Customer: ${data.customerName}\n• Number: ${data.customerNumber}`;
-      message += `\n\n🚖 Driver Info\n• Driver: ${data.driverName}\n• Number: ${data.driverNumber}`;
-      message += `\n\n🚗 Vehicle Info\n• Vehicle: ${data.vehicleModel}\n• Number: ${data.vehicleNumber}`;
-      message += `\n\n⏰ Time Details\n• Start Time: ${formatTimeTo12Hour(data.startTime)}\n• End Time: ${formatTimeTo12Hour(data.endTime)}\n• Duration: ${data.duration} hrs\n• Extra Hours: ${data.extraHours}`;
-      message += `\n\n📏 Distance Details\n• Start KM: ${data.startKm}\n• End KM: ${data.endKm}\n• Total KM: ${data.totalKm}\n• Extra KM: ${data.extraKm}`;
-      message += `\n\n💸 Fare Details\n• Parking: ₹${data.parking}\n• Toll: ₹${data.toll}\n• Total: ₹${data.totalAmount}\n• Payment: ${data.paymentStatus}`;
-      if (data.paymentStatus === "Paid" || data.paymentStatus === "Partially Paid") {
-        message += `\n• Paid: ₹${data.paidAmount}`;
-      }
-      if (data.paymentStatus === "Partially Paid") {
-        message += `\n• Balance: ₹${data.balanceAmount}`;
-      }
+      
+      sections.forEach(section => {
+        const filledFields = section.fields
+          .filter(field => {
+            const value = data[field.key];
+            return value && value !== "0" && value !== "";
+          })
+          .map(field => {
+            const value = data[field.key];
+            const formattedValue = field.format ? field.format(value) : value;
+            return `• ${field.label}: ${formattedValue}`;
+          });
+
+        if (filledFields.length > 0) {
+          message += `\n\n${section.heading}\n${filledFields.join('\n')}`;
+        }
+      });
+
       return message.trim();
     }
 
@@ -344,8 +555,14 @@
             opt.setAttribute("data-number", d.number || "");
             select.appendChild(opt);
           });
+        } else {
+          console.warn("No drivers found in Firebase.");
+          alert("⚠️ No drivers available. Please add drivers in the admin panel.");
         }
-      } catch (error) {}
+      } catch (error) {
+        console.error("Error loading drivers:", error);
+        alert("⚠️ Failed to load drivers. Please check your connection.");
+      }
     }
 
     async function loadVehicles() {
@@ -362,70 +579,53 @@
             opt.setAttribute("data-number", v.number || "");
             select.appendChild(opt);
           });
+        } else {
+          console.warn("No vehicles found in Firebase.");
+          alert("⚠️ No vehicles available. Please add vehicles in the admin panel.");
         }
-      } catch (error) {}
-    }
-
-    async function loadNoDutyVehicles() {
-      try {
-        const snap = await get(child(dbRef, 'vehicles'));
-        const select = document.getElementById("noDutyVehicle");
-        select.innerHTML = '<option value="" selected disabled>Select Vehicle (for No Duty)</option>';
-        if (snap.exists()) {
-          const data = snap.val();
-          Object.values(data).forEach(v => {
-            const opt = document.createElement("option");
-            opt.value = v.number || v.model;
-            opt.text = v.model + (v.number ? ` (${v.number})` : "");
-            select.appendChild(opt);
-          });
-        }
-      } catch (error) {}
-    }
-
-    async function loadServiceVehicles() {
-      try {
-        const snap = await get(child(dbRef, 'vehicles'));
-        const select = document.getElementById("serviceVehicle");
-        select.innerHTML = '<option value="" selected disabled>Select Vehicle (for Service)</option>';
-        if (snap.exists()) {
-          const data = snap.val();
-          Object.values(data).forEach(v => {
-            const opt = document.createElement("option");
-            opt.value = v.number || v.model;
-            opt.text = v.model + (v.number ? ` (${v.number})` : "");
-            select.appendChild(opt);
-          });
-        }
-      } catch (error) {}
+      } catch (error) {
+        console.error("Error loading vehicles:", error);
+        alert("⚠️ Failed to load vehicles. Please check your connection.");
+      }
     }
 
     window.addEventListener("DOMContentLoaded", async () => {
-      document.getElementById("bookingId").value = await generateTripId();
-      await Promise.all([loadDrivers(), loadVehicles(), loadServiceVehicles(), loadNoDutyVehicles()]);
-      document.getElementById("startTime").addEventListener("change", calcDuration);
-      document.getElementById("endTime").addEventListener("change", calcDuration);
-      document.getElementById("startKm").addEventListener("input", calcTotalKm);
-      document.getElementById("endKm").addEventListener("input", calcTotalKm);
-      document.getElementById("driverName").addEventListener("change", function () {
-        const number = this.selectedOptions[0]?.getAttribute("data-number") || "";
-        document.getElementById("driverNumber").value = number;
-      });
-      document.getElementById("vehicleModel").addEventListener("change", function () {
-        const number = this.selectedOptions[0]?.getAttribute("data-number") || "";
-        document.getElementById("vehicleNumber").value = number;
-      });
-      document.getElementById("paymentStatus").addEventListener("change", handlePaymentStatusChange);
-      document.getElementById("paidAmount").addEventListener("input", updateBalanceAmount);
-      document.getElementById("totalAmount").addEventListener("input", updateBalanceAmount);
-      document.getElementById("date").addEventListener("change", function () {
-        document.getElementById("formattedDate").value = formatDateToCustom(this.value);
-      });
-      document.getElementById("formattedDate").addEventListener("click", function () {
-        document.getElementById("date").showPicker();
-      });
-      handlePaymentStatusChange();
-      loadDayStatusTable();
+      try {
+        document.getElementById("bookingId").value = await generateTripId();
+        await Promise.all([loadDrivers(), loadVehicles()]);
+        document.getElementById("startTime").addEventListener("change", calcDuration);
+        document.getElementById("endTime").addEventListener("change", calcDuration);
+        document.getElementById("startKm").addEventListener("input", calcTotalKm);
+        document.getElementById("endKm").addEventListener("input", calcTotalKm);
+        document.getElementById("driverName").addEventListener("change", function () {
+          const number = this.selectedOptions[0]?.getAttribute("data-number") || "";
+          document.getElementById("driverNumber").value = number;
+        });
+        document.getElementById("vehicleModel").addEventListener("change", function () {
+          const number = this.selectedOptions[0]?.getAttribute("data-number") || "";
+          document.getElementById("vehicleNumber").value = number;
+        });
+        document.getElementById("paymentStatus").addEventListener("change", handlePaymentStatusChange);
+        document.getElementById("paidAmount").addEventListener("input", updateBalanceAmount);
+        document.getElementById("totalAmount").addEventListener("input", updateBalanceAmount);
+        document.getElementById("date").addEventListener("change", function () {
+          document.getElementById("formattedDate").value = formatDateToCustom(this.value);
+        });
+        document.getElementById("formattedDate").addEventListener("click", function () {
+          document.getElementById("date").showPicker();
+        });
+        const resetFlagRef = ref(db, 'tripResetFlag/');
+        onValue(resetFlagRef, async (snapshot) => {
+          const flag = snapshot.val();
+          if (flag === true || flag === "reset") {
+            document.getElementById("bookingId").value = "#NST001";
+          }
+        });
+        handlePaymentStatusChange();
+      } catch (error) {
+        console.error("Error initializing form:", error);
+        alert("⚠️ Failed to initialize form. Please refresh the page.");
+      }
     });
 
     function calcDuration() {
@@ -478,71 +678,17 @@
       }
     }
 
-    document.getElementById("markNoDutyBtn").addEventListener("click", async () => {
-      const date = document.getElementById("statusDate").value;
-      const vehicle = document.getElementById("noDutyVehicle").value;
-      if (!date) { showStatusMsg("Please select a date.", "red"); return; }
-      if (!vehicle) { showStatusMsg("Please select a vehicle.", "red"); return; }
-      await set(ref(db, 'dayStatus/' + date), { status: "No Duty", vehicle });
-      showStatusMsg("Marked as No Duty for " + formatDateToCustom(date), "green");
-      loadDayStatusTable();
-    });
-
-    document.getElementById("markServiceBtn").addEventListener("click", async () => {
-      const date = document.getElementById("statusDate").value;
-      const vehicle = document.getElementById("serviceVehicle").value;
-      const notes = document.getElementById("serviceNotes").value.trim();
-      if (!date) { showStatusMsg("Please select a date.", "red"); return; }
-      if (!vehicle) { showStatusMsg("Please select a vehicle.", "red"); return; }
-      await set(ref(db, 'dayStatus/' + date), { status: "Vehicle Service", vehicle, notes });
-      showStatusMsg("Marked as Vehicle Service for " + formatDateToCustom(date), "green");
-      loadDayStatusTable();
-    });
-
-    function showStatusMsg(msg, color) {
-      const el = document.getElementById("statusMsg");
-      el.textContent = msg;
-      el.style.color = color === "green" ? "#16a34a" : "#dc2626";
-      setTimeout(() => { el.textContent = ""; }, 4000);
-    }
-
-    async function loadDayStatusTable() {
-      const tbody = document.getElementById("statusTableBody");
-      tbody.innerHTML = "";
-      const dayStatusSnap = await get(child(dbRef, 'dayStatus'));
-      const dayStatus = dayStatusSnap.exists() ? dayStatusSnap.val() : {};
-      const dates = Object.keys(dayStatus).sort((a, b) => b.localeCompare(a));
-      for (const dateStr of dates) {
-        const statusObj = dayStatus[dateStr] || {};
-        let status = statusObj.status || "No Entry";
-        let tripId = statusObj.tripId || "";
-        let vehicle = (statusObj.status === "Vehicle Service" || statusObj.status === "No Duty") ? (statusObj.vehicle || "") : "";
-        let notes = statusObj.notes || "";
-        let statusClass = "";
-        if (status === "Trip") statusClass = "status-trip";
-        else if (status === "No Duty") statusClass = "status-noduty";
-        else if (status === "Vehicle Service") statusClass = "status-service";
-        else statusClass = "";
-        tbody.innerHTML += `
-          <tr>
-            <td>${formatDateToCustom(dateStr)}</td>
-            <td class="${statusClass}">${status}</td>
-            <td>${tripId}</td>
-            <td>${vehicle}</td>
-            <td>${notes}</td>
-          </tr>
-        `;
-      }
-    }
-
     document.getElementById("tripForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      // Get the latest Trip ID just before saving
-      const tripId = await generateTripId();
-      document.getElementById("bookingId").value = tripId;
-
+      const form = e.target;
+      const driverName = document.getElementById("driverName").value;
+      const vehicleModel = document.getElementById("vehicleModel").value;
+      if (!driverName || !vehicleModel) {
+        alert("❌ Please select a driver and vehicle.");
+        return;
+      }
       const data = {
-        bookingId: tripId,
+        bookingId: document.getElementById("bookingId").value,
         date: document.getElementById("date").value,
         duty: document.getElementById("duty").value,
         reference: document.getElementById("reference").value,
@@ -550,9 +696,9 @@
         dropLocation: document.getElementById("dropLocation").value,
         customerName: document.getElementById("customerName").value,
         customerNumber: document.getElementById("customerNumber").value,
-        driverName: document.getElementById("driverName").value,
+        driverName: driverName,
         driverNumber: document.getElementById("driverNumber").value,
-        vehicleModel: document.getElementById("vehicleModel").value,
+        vehicleModel: vehicleModel,
         vehicleNumber: document.getElementById("vehicleNumber").value,
         startTime: document.getElementById("startTime").value,
         endTime: document.getElementById("endTime").value,
@@ -570,14 +716,24 @@
         balanceAmount: document.getElementById("balanceAmount").value || "0"
       };
       try {
+        if (await tripIdExists(data.bookingId)) {
+          alert("❌ Trip ID already exists. Cannot save.");
+          return;
+        }
         await push(ref(db, "trips/"), data);
         const message = generateWhatsAppMessage(data);
         const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
         window.open(url, '_blank');
-        e.target.reset();
+        form.reset();
         document.getElementById("bookingId").value = await generateTripId();
-        loadDayStatusTable();
+        document.getElementById("driverName").value = "";
+        document.getElementById("vehicleModel").value = "";
+        document.getElementById("driverNumber").value = "";
+        document.getElementById("vehicleNumber").value = "";
+        document.getElementById("formattedDate").value = "";
+        handlePaymentStatusChange();
       } catch (error) {
+        console.error("Error saving trip:", error);
         alert("⚠️ Failed to save trip. Please try again.");
       }
     });
