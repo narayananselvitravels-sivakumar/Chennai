@@ -310,7 +310,7 @@
     </form>
   </div>
 
-  <!-- Mark Non-Trip Day Section -->
+  <!-- Non-Trip Day Section -->
   <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-8 bg-gray-50 rounded-lg shadow">
     <h3 class="text-2xl font-bold text-gray-900 mb-4"><i class="fas fa-calendar-times mr-2"></i> Mark Non-Trip Day</h3>
     <form id="nonTripForm" class="space-y-4">
@@ -844,6 +844,10 @@
           return;
         }
         await push(ref(db, "trips/"), data);
+        // Reset the flag if this was a reset
+        if (data.bookingId === "#NST001") {
+          await set(ref(db, 'tripResetFlag'), false);
+        }
         alert("Trip saved!");
         form.reset();
         document.getElementById("bookingId").value = await generateTripId();
