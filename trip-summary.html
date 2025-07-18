@@ -3,372 +3,115 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Trip Summary - NST Travels</title>
+  <title>Master Summary - NST Travels</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <!-- jsPDF and autoTable for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background-color: #f3f4f6;
-    }
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      padding: 2rem;
-    }
-    .table-wrapper {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      padding: 1.5rem;
-      overflow-x: auto;
-    }
-    table {
-      font-size: 0.9rem;
-      width: 100%;
-      min-width: 1200px;
-    }
-    th, td {
-      padding: 12px;
-      text-align: center;
+    body { font-family: 'Inter', sans-serif; background: #f3f4f6; }
+    .container { max-width: 1200px; margin: auto; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);}
+    .summary-table th, .summary-table td { text-align: left; }
+    .summary-table th, .summary-table td {
+      min-width: 100px;
+      max-width: 180px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       vertical-align: middle;
     }
-    th {
-      background-color: #f9fafb;
-      font-weight: 600;
-    }
-    tr {
-      transition: background-color 0.2s ease-in-out;
-    }
-    tr:hover {
-      background-color: #f1f5f9;
-    }
-    .input-field, .select-field {
-      width: 100%;
-      padding: 0.5rem;
-      border-radius: 0.375rem;
-      border: 1px solid #d1d5db;
-      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-    .input-field:focus, .select-field:focus {
-      outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-    }
-    .btn {
-      transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
-    }
-    .btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-    }
-    .btn:disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal.show {
-      display: flex;
-    }
-    .modal-content {
-      background: white;
-      border-radius: 8px;
-      max-width: 95%;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
-    }
-    .modal-header {
-      background: #4f46e5;
-      color: white;
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
-    }
-    .modal-body {
-      padding: 1.5rem;
-    }
-    .modal-footer {
-      padding: 1rem;
-      border-top: 1px solid #e5e7eb;
-      display: flex;
-      justify-content: flex-end;
-      gap: 0.5rem;
-    }
-    .modal-close {
-      background: none;
-      border: none;
-      color: white;
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-    @media (max-width: 640px) {
-      table {
-        font-size: 0.75rem;
-      }
-      .btn {
-        font-size: 0.75rem;
-        padding: 0.5rem 0.75rem;
-      }
-      .input-field, .select-field {
-        font-size: 0.8rem;
-      }
-      .modal-content {
-        max-width: 100%;
-      }
+    .action-btn { margin: 0 2px; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none;}
+    .delete-btn { background: #ef4444; color: #fff; }
+    .delete-btn:hover { background: #dc2626; }
+    .view-btn { background: #3b82f6; color: #fff; }
+    .view-btn:hover { background: #2563eb; }
+    .type-badge { padding: 0.2em 0.6em; border-radius: 0.3em; font-size: 0.95em; font-weight: 700; }
+    .type-trip { background: #dbeafe; color: #1e40af; }
+    .type-noduty { background: #fef9c3; color: #b45309; }
+    .type-service { background: #fef2f2; color: #b91c1c; }
+    .type-leave { background: #f0fdf4; color: #166534; }
+    .filter-bar { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .filter-bar input, .filter-bar select { border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 1rem; }
+    .overflow-x-auto { overflow-x: auto; }
+    /* Modal styles */
+    .modal-bg { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); }
+    .modal-bg.active { display: flex; align-items: center; justify-content: center; }
+    .modal-content { background: #fff; border-radius: 1rem; max-width: 500px; width: 95vw; padding: 2rem; box-shadow: 0 8px 32px rgba(0,0,0,0.2);}
+    .modal-content h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; }
+    .modal-content table { width: 100%; }
+    .modal-content td { padding: 0.3em 0.5em; }
+    .modal-close { float: right; font-size: 1.5rem; color: #ef4444; cursor: pointer; }
+    @media (max-width: 600px) {
+      .modal-content { padding: 1rem; }
+      th, td { min-width: 80px; }
     }
   </style>
 </head>
 <body>
-  <!-- Navigation Bar -->
-  <nav class="bg-white shadow-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="flex items-center">
-          <a href="#" class="text-2xl font-bold text-indigo-600">NST Travels</a>
-        </div>
-        <div class="hidden sm:flex items-center space-x-4">
-          <a href="admin-dashboard.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
-          <a href="attendance.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Attendance</a>
-          <a href="driver-dashboard.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Driver Dashboard</a>
-          <a href="drivers-vehicles.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Drivers & Vehicles</a>
-          <a href="payment-summary.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Payment Summary</a>
-          <a href="revenue.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Revenue</a>
-          <a href="trip-summary.html" class="text-indigo-600 font-semibold px-3 py-2 rounded-md text-sm font-medium">Trip Summary</a>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6"><i class="fas fa-road mr-2"></i> Trip Summary</h2>
-
-    <div class="flex flex-wrap gap-4 mb-6">
-      <select id="driverFilter" class="select-field px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Filter by Driver">
-        <option value="">Filter by Driver</option>
+  <div class="container mt-8">
+    <h2 class="text-3xl font-bold text-gray-900 mb-8"><i class="fas fa-table mr-2"></i> Master Summary</h2>
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="Search all columns..." />
+      <select id="typeFilter">
+        <option value="">All Types</option>
+        <option value="Trip">Trip</option>
+        <option value="No Duty">No Duty</option>
+        <option value="Vehicle Service">Vehicle Service</option>
+        <option value="Driver Leave">Driver Leave</option>
       </select>
-      <select id="vehicleFilter" class="select-field px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Filter by Vehicle">
-        <option value="">Filter by Vehicle</option>
-      </select>
-      <input type="date" id="startDate" class="input-field px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Start Date" />
-      <input type="date" id="endDate" class="input-field px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="End Date" />
-      <button id="deleteSelected" class="btn bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed" title="Delete Selected" aria-label="Delete Selected">
-        <i class="fas fa-trash mr-2"></i> Delete Selected
-      </button>
-      <button id="exportExcel" class="btn bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700" title="Export to Excel" aria-label="Export to Excel">
-        <i class="fas fa-file-excel mr-2"></i> Excel
-      </button>
-      <button id="exportPDF" class="btn bg-red-100 text-red-800 px-6 py-3 rounded-md hover:bg-red-200" title="Export to PDF" aria-label="Export to PDF">
-        <i class="fas fa-file-pdf mr-2"></i> PDF
-      </button>
+      <button id="exportBtn" class="btn bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"><i class="fas fa-file-excel mr-2"></i>Export to Excel/CSV</button>
+      <button id="pdfBtn" class="btn bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"><i class="fas fa-file-pdf mr-2"></i>Export to PDF</button>
     </div>
-
-    <div class="table-wrapper">
-      <table class="table-auto border-collapse border border-gray-200" id="tripTable">
-        <thead>
-          <tr>
-            <th class="border border-gray-200"><input type="checkbox" id="selectAll" aria-label="Select All Trips" /></th>
-            <th class="border border-gray-200">Trip ID</th>
-            <th class="border border-gray-200">Date</th>
-            <th class="border border-gray-200">Duty</th>
-            <th class="border border-gray-200">Reference</th>
-            <th class="border border-gray-200">Pickup</th>
-            <th class="border border-gray-200">Drop</th>
-            <th class="border border-gray-200">Customer Name</th>
-            <th class="border border-gray-200">Customer Number</th>
-            <th class="border border-gray-200">Driver Name</th>
-            <th class="border border-gray-200">Driver Number</th>
-            <th class="border border-gray-200">Vehicle Model</th>
-            <th class="border border-gray-200">Vehicle Number</th>
-            <th class="border border-gray-200">Start Time</th>
-            <th class="border border-gray-200">End Time</th>
-            <th class="border border-gray-200">Duration (hrs)</th>
-            <th class="border border-gray-200">Extra Hours</th>
-            <th class="border border-gray-200">Start KM</th>
-            <th class="border border-gray-200">End KM</th>
-            <th class="border border-gray-200">Total KM</th>
-            <th class="border border-gray-200">Extra KM</th>
-            <th class="border border-gray-200">Parking (₹)</th>
-            <th class="border border-gray-200">Toll (₹)</th>
-            <th class="border border-gray-200">Total Amount (₹)</th>
-            <th class="border border-gray-200">Payment Status</th>
-            <th class="border border-gray-200">Paid Amount (₹)</th>
-            <th class="border border-gray-200">Balance Amount (₹)</th>
-            <th class="border border-gray-200">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="tripTableBody"></tbody>
-      </table>
-    </div>
-
-    <!-- Edit Modal -->
-    <div class="modal" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-      <div class="modal-content">
-        <form id="editForm">
-          <div class="modal-header">
-            <h5 class="modal-title" id="editModalLabel">Edit Trip</h5>
-            <button type="button" class="modal-close" aria-label="Close">&times;</button>
-          </div>
-          <div class="modal-body">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <!-- Trip Details -->
-              <div>
-                <label for="editBookingId" class="block text-sm font-medium text-gray-700 mb-1">Trip ID</label>
-                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md" id="editBookingId" readonly required aria-label="Trip ID" />
-              </div>
-              <div>
-                <label for="editDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                <input type="date" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editDate" required aria-label="Date" />
-              </div>
-              <div>
-                <label for="editDuty" class="block text-sm font-medium text-gray-700 mb-1">Duty</label>
-                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editDuty" aria-label="Duty" />
-              </div>
-              <div>
-                <label for="editReference" class="block text-sm font-medium text-gray-700 mb-1">Reference</label>
-                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editReference" aria-label="Reference" />
-              </div>
-              <!-- Locations -->
-              <div>
-                <label for="editPickupLocation" class="block text-sm font-medium text-gray-700 mb-1">Pickup</label>
-                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editPickupLocation" required aria-label="Pickup Location" />
-              </div>
-              <div>
-                <label for="editDropLocation" class="block text-sm font-medium text-gray-700 mb-1">Drop</label>
-                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editDropLocation" required aria-label="Drop Location" />
-              </div>
-              <!-- Customer Info -->
-              <div>
-                <label for="editCustomerName" class="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
-                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editCustomerName" required aria-label="Customer Name" />
-              </div>
-              <div>
-                <label for="editCustomerNumber" class="block text-sm font-medium text-gray-700 mb-1">Customer Number</label>
-                <input type="tel" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editCustomerNumber" pattern="[0-9]{10,15}" required aria-label="Customer Number" />
-              </div>
-              <!-- Driver Info -->
-              <div>
-                <label for="editDriverName" class="block text-sm font-medium text-gray-700 mb-1">Driver Name</label>
-                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editDriverName" required aria-label="Driver Name" />
-              </div>
-              <div>
-                <label for="editDriverNumber" class="block text-sm font-medium text-gray-700 mb-1">Driver Number</label>
-                <input type="tel" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editDriverNumber" pattern="[0-9]{10,15}" required aria-label="Driver Number" />
-              </div>
-              <!-- Vehicle Info -->
-              <div>
-                <label for="editVehicleModel" class="block text-sm font-medium text-gray-700 mb-1">Vehicle Model</label>
-                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editVehicleModel" required aria-label="Vehicle Model" />
-              </div>
-              <div>
-                <label for="editVehicleNumber" class="block text-sm font-medium text-gray-700 mb-1">Vehicle Number</label>
-                <input type="text" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editVehicleNumber" required aria-label="Vehicle Number" />
-              </div>
-              <!-- Time Details -->
-              <div>
-                <label for="editStartTime" class="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                <input type="time" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editStartTime" required aria-label="Start Time" />
-              </div>
-              <div>
-                <label for="editEndTime" class="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                <input type="time" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editEndTime" required aria-label="End Time" />
-              </div>
-              <div>
-                <label for="editDuration" class="block text-sm font-medium text-gray-700 mb-1">Duration (hrs)</label>
-                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md" id="editDuration" step="0.01" readonly aria-label="Duration" />
-              </div>
-              <div>
-                <label for="editExtraHours" class="block text-sm font-medium text-gray-700 mb-1">Extra Hours</label>
-                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editExtraHours" min="0" aria-label="Extra Hours" />
-              </div>
-              <!-- Distance Details -->
-              <div>
-                <label for="editStartKm" class="block text-sm font-medium text-gray-700 mb-1">Start KM</label>
-                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editStartKm" min="0" required aria-label="Start KM" />
-              </div>
-              <div>
-                <label for="editEndKm" class="block text-sm font-medium text-gray-700 mb-1">End KM</label>
-                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editEndKm" min="0" required aria-label="End KM" />
-              </div>
-              <div>
-                <label for="editTotalKm" class="block text-sm font-medium text-gray-700 mb-1">Total KM</label>
-                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md" id="editTotalKm" step="0.1" readonly aria-label="Total KM" />
-              </div>
-              <div>
-                <label for="editExtraKm" class="block text-sm font-medium text-gray-700 mb-1">Extra KM</label>
-                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editExtraKm" min="0" aria-label="Extra KM" />
-              </div>
-              <!-- Fare Details -->
-              <div>
-                <label for="editParking" class="block text-sm font-medium text-gray-700 mb-1">Parking (₹)</label>
-                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editParking" min="0" aria-label="Parking" />
-              </div>
-              <div>
-                <label for="editToll" class="block text-sm font-medium text-gray-700 mb-1">Toll (₹)</label>
-                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editToll" min="0" aria-label="Toll" />
-              </div>
-              <div>
-                <label for="editTotalAmount" class="block text-sm font-medium text-gray-700 mb-1">Total Amount (₹)</label>
-                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editTotalAmount" min="0" required aria-label="Total Amount" />
-              </div>
-              <div>
-                <label for="editPaymentStatus" class="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
-                <select class="select-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editPaymentStatus" required aria-label="Payment Status">
-                  <option value="" disabled>Select</option>
-                  <option value="Paid">Paid</option>
-                  <option value="Not Paid">Not Paid</option>
-                  <option value="Partially Paid">Partially Paid</option>
-                </select>
-              </div>
-              <div id="editPaidAmountRow" style="display:none;">
-                <label for="editPaidAmount" class="block text-sm font-medium text-gray-700 mb-1">Paid Amount (₹)</label>
-                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" id="editPaidAmount" min="0" aria-label="Paid Amount" />
-              </div>
-              <div id="editBalanceAmountRow" style="display:none;">
-                <label for="editBalanceAmount" class="block text-sm font-medium text-gray-700 mb-1">Balance Amount (₹)</label>
-                <input type="number" class="input-field w-full px-4 py-2 border border-gray-300 rounded-md" id="editBalanceAmount" readonly aria-label="Balance Amount" />
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 modal-close">Cancel</button>
-            <button type="submit" class="btn bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Save Changes</button>
-          </div>
-        </form>
-      </div>
+    <div class="overflow-x-auto">
+    <table class="summary-table min-w-full bg-white rounded-lg shadow">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Date</th>
+          <th>Trip ID</th>
+          <th>Duty</th>
+          <th>Reference</th>
+          <th>Pickup</th>
+          <th>Drop</th>
+          <th>Driver</th>
+          <th>Driver Number</th>
+          <th>Vehicle</th>
+          <th>Vehicle Number</th>
+          <th>Customer</th>
+          <th>Customer Number</th>
+          <th>Start</th>
+          <th>End</th>
+          <th>Duration</th>
+          <th>Total KM</th>
+          <th>Total (₹)</th>
+          <th>Payment</th>
+          <th>Paid (₹)</th>
+          <th>Balance (₹)</th>
+          <th>Reason/Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="masterSummaryTable">
+        <!-- Data rows will be inserted here -->
+      </tbody>
+    </table>
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="bg-gray-800 text-white py-6 mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <p>© 2025 NST Travels. All rights reserved.</p>
+  <!-- Modal for Trip View -->
+  <div id="tripModalBg" class="modal-bg">
+    <div class="modal-content">
+      <span class="modal-close" id="modalCloseBtn">&times;</span>
+      <h3>Trip Details</h3>
+      <table id="tripModalTable"></table>
     </div>
-  </footer>
+  </div>
 
-  <!-- Firebase & Dependencies -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, onValue, remove, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+    import { getDatabase, ref, child, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
     const firebaseConfig = {
       apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
       authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
@@ -378,528 +121,347 @@
       messagingSenderId: "395599682835",
       appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const dbRef = ref(db);
 
-    // Global variables
-    let allTrips = [];
-    let tripKeys = [];
-    let currentEditKey = null;
+    let allRows = [];
+    let lastFilteredRows = [];
 
-    // Elements
-    const tripTableBody = document.getElementById("tripTableBody");
-    const driverFilter = document.getElementById("driverFilter");
-    const vehicleFilter = document.getElementById("vehicleFilter");
-    const startDateInput = document.getElementById("startDate");
-    const endDateInput = document.getElementById("endDate");
-    const selectAllCheckbox = document.getElementById("selectAll");
-    const deleteSelectedBtn = document.getElementById("deleteSelected");
-    const exportExcelBtn = document.getElementById("exportExcel");
-    const exportPDFBtn = document.getElementById("exportPDF");
-    const editModalEl = document.getElementById("editModal");
-    const editForm = document.getElementById("editForm");
-
-    // Custom modal handling
-    const editModal = {
-      show: () => editModalEl.classList.add("show"),
-      hide: () => editModalEl.classList.remove("show")
-    };
-    document.querySelectorAll(".modal-close").forEach(btn => {
-      btn.addEventListener("click", () => editModal.hide());
-    });
-
-    // Fetch trips from Firebase and listen for changes
-    onValue(ref(db, "trips"), (snapshot) => {
-      const tripsObj = snapshot.val() || {};
-      allTrips = Object.values(tripsObj);
-      tripKeys = Object.keys(tripsObj);
-      populateFilters();
-      renderTrips(driverFilter.value, vehicleFilter.value);
-    });
-
-    // Populate driver and vehicle filters
-    function populateFilters() {
-      const drivers = [...new Set(allTrips.map((t) => t.driverName).filter(Boolean))].sort();
-      const vehicles = [...new Set(allTrips.map((t) => t.vehicleModel).filter(Boolean))].sort();
-
-      fillSelect(driverFilter, drivers, "Filter by Driver");
-      fillSelect(vehicleFilter, vehicles, "Filter by Vehicle");
+    function formatDate(dateStr) {
+      if (!dateStr) return "";
+      const [y, m, d] = dateStr.split("-");
+      if (y && m && d) return `${d}-${m}-${y}`;
+      return dateStr;
     }
 
-    function fillSelect(selectElem, items, defaultText) {
-      const current = selectElem.value;
-      selectElem.innerHTML = `<option value="">${defaultText}</option>`;
-      items.forEach((item) => {
-        const opt = document.createElement("option");
-        opt.value = item;
-        opt.textContent = item;
-        selectElem.appendChild(opt);
-      });
-      selectElem.value = current || "";
+    function padDate(date) {
+      return date ? date : "";
     }
 
-    // Render trips table with optional filtering
-    function renderTrips(driverFilterVal, vehicleFilterVal) {
-      const sDate = startDateInput.value ? new Date(startDateInput.value) : null;
-      const eDate = endDateInput.value ? new Date(endDateInput.value) : null;
-
-      tripTableBody.innerHTML = "";
-      let filteredTrips = allTrips.map((trip, i) => ({ ...trip, key: tripKeys[i] }));
-
-      if (driverFilterVal) {
-        filteredTrips = filteredTrips.filter((t) => t.driverName === driverFilterVal);
-      }
-      if (vehicleFilterVal) {
-        filteredTrips = filteredTrips.filter((t) => t.vehicleModel === vehicleFilterVal);
-      }
-      if (sDate) {
-        filteredTrips = filteredTrips.filter((t) => new Date(t.date) >= sDate);
-      }
-      if (eDate) {
-        filteredTrips = filteredTrips.filter((t) => new Date(t.date) <= eDate);
-      }
-
-      if (filteredTrips.length === 0) {
-        tripTableBody.innerHTML = `<tr><td colspan="28" class="text-center py-4 text-gray-600">No trips found.</td></tr>`;
-        return;
-      }
-
-      filteredTrips.forEach((trip) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td class="border border-gray-200"><input type="checkbox" class="trip-select" data-key="${trip.key}" aria-label="Select Trip ${trip.bookingId}" /></td>
-          <td class="border border-gray-200">${trip.bookingId || ""}</td>
-          <td class="border border-gray-200">${trip.date || ""}</td>
-          <td class="border border-gray-200">${trip.duty || ""}</td>
-          <td class="border border-gray-200">${trip.reference || ""}</td>
-          <td class="border border-gray-200">${trip.pickupLocation || ""}</td>
-          <td class="border border-gray-200">${trip.dropLocation || ""}</td>
-          <td class="border border-gray-200">${trip.customerName || ""}</td>
-          <td class="border border-gray-200">${trip.customerNumber || ""}</td>
-          <td class="border border-gray-200">${trip.driverName || ""}</td>
-          <td class="border border-gray-200">${trip.driverNumber || ""}</td>
-          <td class="border border-gray-200">${trip.vehicleModel || ""}</td>
-          <td class="border border-gray-200">${trip.vehicleNumber || ""}</td>
-          <td class="border border-gray-200">${formatTime12h(trip.startTime)}</td>
-          <td class="border border-gray-200">${formatTime12h(trip.endTime)}</td>
-          <td class="border border-gray-200">${trip.duration || ""}</td>
-          <td class="border border-gray-200">${trip.extraHours || ""}</td>
-          <td class="border border-gray-200">${trip.startKm || ""}</td>
-          <td class="border border-gray-200">${trip.endKm || ""}</td>
-          <td class="border border-gray-200">${trip.totalKm || ""}</td>
-          <td class="border border-gray-200">${trip.extraKm || ""}</td>
-          <td class="border border-gray-200">${trip.parking || ""}</td>
-          <td class="border border-gray-200">${trip.toll || ""}</td>
-          <td class="border border-gray-200">${trip.totalAmount || ""}</td>
-          <td class="border border-gray-200">${trip.paymentStatus || ""}</td>
-          <td class="border border-gray-200">${trip.paymentStatus === "Paid" || trip.paymentStatus === "Partially Paid" ? (trip.paidAmount || "0") : ""}</td>
-          <td class="border border-gray-200">${trip.paymentStatus === "Partially Paid" ? (trip.balanceAmount || "0") : ""}</td>
-          <td class="border border-gray-200">
-            <button class="btn bg-indigo-600 text-white px-3 py-1 rounded-md hover:bg-indigo-700 edit-btn" data-key="${trip.key}" aria-label="Edit ${trip.bookingId}">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 delete-btn" data-key="${trip.key}" aria-label="Delete ${trip.bookingId}">
-              <i class="fas fa-trash"></i>
-            </button>
-            <button class="btn bg-green-100 text-green-800 px-3 py-1 rounded-md hover:bg-green-200 whatsapp-btn" data-key="${trip.key}" aria-label="Share ${trip.bookingId} via WhatsApp">
-              <i class="fas fa-whatsapp"></i>
-            </button>
-          </td>
-        `;
-        tripTableBody.appendChild(row);
-      });
-
-      setupActionButtons();
-    }
-
-    // Format 24h time to 12h with AM/PM
-    function formatTime12h(timeStr) {
-      if (!timeStr) return "";
-      const [hh, mm] = timeStr.split(":");
-      let hour = parseInt(hh, 10);
-      const ampm = hour >= 12 ? "PM" : "AM";
-      hour = hour % 12 || 12;
-      return `${hour}:${mm} ${ampm}`;
-    }
-
-    // Setup Edit, Delete, WhatsApp buttons event listeners
-    function setupActionButtons() {
-      document.querySelectorAll(".edit-btn").forEach((btn) => {
-        btn.onclick = () => {
-          currentEditKey = btn.getAttribute("data-key");
-          openEditModal(currentEditKey);
-        };
-      });
-
-      document.querySelectorAll(".delete-btn").forEach((btn) => {
-        btn.onclick = () => {
-          const key = btn.getAttribute("data-key");
-          if (confirm(`Are you sure you want to delete trip with ID ${getTripByKey(key).bookingId}?`)) {
-            deleteTrip(key);
-          }
-        };
-      });
-
-      document.querySelectorAll(".whatsapp-btn").forEach((btn) => {
-        btn.onclick = () => {
-          const key = btn.getAttribute("data-key");
-          shareTripWhatsApp(key);
-        };
-      });
-    }
-
-    // Get trip object by key
-    function getTripByKey(key) {
-      const index = tripKeys.indexOf(key);
-      return index > -1 ? allTrips[index] : null;
-    }
-
-    // Open edit modal and pre-fill values
-    function openEditModal(key) {
-      const trip = getTripByKey(key);
-      if (!trip) {
-        alert("Trip data not found.");
-        return;
-      }
-
-      document.getElementById("editBookingId").value = trip.bookingId || "";
-      document.getElementById("editDate").value = trip.date || "";
-      document.getElementById("editDuty").value = trip.duty || "";
-      document.getElementById("editReference").value = trip.reference || "";
-      document.getElementById("editPickupLocation").value = trip.pickupLocation || "";
-      document.getElementById("editDropLocation").value = trip.dropLocation || "";
-      document.getElementById("editCustomerName").value = trip.customerName || "";
-      document.getElementById("editCustomerNumber").value = trip.customerNumber || "";
-      document.getElementById("editDriverName").value = trip.driverName || "";
-      document.getElementById("editDriverNumber").value = trip.driverNumber || "";
-      document.getElementById("editVehicleModel").value = trip.vehicleModel || "";
-      document.getElementById("editVehicleNumber").value = trip.vehicleNumber || "";
-      document.getElementById("editStartTime").value = trip.startTime || "";
-      document.getElementById("editEndTime").value = trip.endTime || "";
-      document.getElementById("editDuration").value = trip.duration || "";
-      document.getElementById("editExtraHours").value = trip.extraHours || "";
-      document.getElementById("editStartKm").value = trip.startKm || "";
-      document.getElementById("editEndKm").value = trip.endKm || "";
-      document.getElementById("editTotalKm").value = trip.totalKm || "";
-      document.getElementById("editExtraKm").value = trip.extraKm || "";
-      document.getElementById("editParking").value = trip.parking || "";
-      document.getElementById("editToll").value = trip.toll || "";
-      document.getElementById("editTotalAmount").value = trip.totalAmount || "";
-      document.getElementById("editPaymentStatus").value = trip.paymentStatus || "";
-      document.getElementById("editPaidAmount").value = trip.paidAmount || "";
-      document.getElementById("editBalanceAmount").value = trip.balanceAmount || "";
-
-      handlePaymentStatusEditChange(trip.paymentStatus);
-      editModal.show();
-    }
-
-    // Handle Payment Status change in edit modal
-    function handlePaymentStatusEditChange(status) {
-      const paidRow = document.getElementById("editPaidAmountRow");
-      const balanceRow = document.getElementById("editBalanceAmountRow");
-      if (status === "Paid" || status === "Partially Paid") {
-        paidRow.style.display = "block";
-        balanceRow.style.display = status === "Partially Paid" ? "block" : "none";
+    function renderTable(rows) {
+      lastFilteredRows = rows;
+      const tbody = document.getElementById("masterSummaryTable");
+      tbody.innerHTML = "";
+      if (rows.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='23' class='text-center py-4'>No data found.</td></tr>";
       } else {
-        paidRow.style.display = "none";
-        balanceRow.style.display = "none";
-        document.getElementById("editPaidAmount").value = "";
-        document.getElementById("editBalanceAmount").value = "";
-      }
-      updateBalanceAmount();
-    }
-
-    // Update Balance Amount in edit modal
-    function updateBalanceAmount() {
-      const total = parseFloat(document.getElementById("editTotalAmount").value);
-      const paid = parseFloat(document.getElementById("editPaidAmount").value);
-      if (!isNaN(total) && !isNaN(paid)) {
-        const balance = total - paid;
-        document.getElementById("editBalanceAmount").value = balance >= 0 ? balance.toFixed(2) : "";
-      } else {
-        document.getElementById("editBalanceAmount").value = "";
-      }
-    }
-
-    // Calculate Duration and Total KM
-    function recalcDurationAndKm() {
-      const startTime = document.getElementById("editStartTime").value;
-      const endTime = document.getElementById("editEndTime").value;
-      const startKm = parseFloat(document.getElementById("editStartKm").value);
-      const endKm = parseFloat(document.getElementById("editEndKm").value);
-
-      if (startTime && endTime) {
-        const [sh, sm] = startTime.split(":").map(Number);
-        const [eh, em] = endTime.split(":").map(Number);
-        let diff = (eh * 60 + em) - (sh * 60 + sm);
-        if (diff < 0) diff += 24 * 60;
-        const hours = (diff / 60).toFixed(2);
-        document.getElementById("editDuration").value = hours;
-      } else {
-        document.getElementById("editDuration").value = "";
-      }
-
-      if (!isNaN(startKm) && !isNaN(endKm)) {
-        const totalKm = (endKm - startKm).toFixed(2);
-        document.getElementById("editTotalKm").value = totalKm >= 0 ? totalKm : "";
-      } else {
-        document.getElementById("editTotalKm").value = "";
-      }
-    }
-
-    // Attach event listeners
-    ["editStartTime", "editEndTime", "editStartKm", "editEndKm", "editTotalAmount", "editPaidAmount"].forEach((id) =>
-      document.getElementById(id).addEventListener("input", () => {
-        recalcDurationAndKm();
-        updateBalanceAmount();
-      })
-    );
-
-    document.getElementById("editPaymentStatus").addEventListener("change", () => {
-      handlePaymentStatusEditChange(document.getElementById("editPaymentStatus").value);
-    });
-
-    // Save edits to Firebase
-    editForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-
-      if (!currentEditKey) {
-        alert("No trip selected for editing.");
-        return;
-      }
-
-      const updatedTrip = {
-        bookingId: document.getElementById("editBookingId").value.trim(),
-        date: document.getElementById("editDate").value,
-        duty: document.getElementById("editDuty").value.trim(),
-        reference: document.getElementById("editReference").value.trim(),
-        pickupLocation: document.getElementById("editPickupLocation").value.trim(),
-        dropLocation: document.getElementById("editDropLocation").value.trim(),
-        customerName: document.getElementById("editCustomerName").value.trim(),
-        customerNumber: document.getElementById("editCustomerNumber").value.trim(),
-        driverName: document.getElementById("editDriverName").value.trim(),
-        driverNumber: document.getElementById("editDriverNumber").value.trim(),
-        vehicleModel: document.getElementById("editVehicleModel").value.trim(),
-        vehicleNumber: document.getElementById("editVehicleNumber").value.trim(),
-        startTime: document.getElementById("editStartTime").value,
-        endTime: document.getElementById("editEndTime").value,
-        duration: document.getElementById("editDuration").value,
-        extraHours: document.getElementById("editExtraHours").value,
-        startKm: document.getElementById("editStartKm").value,
-        endKm: document.getElementById("editEndKm").value,
-        totalKm: document.getElementById("editTotalKm").value,
-        extraKm: document.getElementById("editExtraKm").value,
-        parking: document.getElementById("editParking").value,
-        toll: document.getElementById("editToll").value,
-        totalAmount: document.getElementById("editTotalAmount").value,
-        paymentStatus: document.getElementById("editPaymentStatus").value,
-        paidAmount: document.getElementById("editPaidAmount").value || "0",
-        balanceAmount: document.getElementById("editBalanceAmount").value || "0"
-      };
-
-      set(ref(db, "trips/" + currentEditKey), updatedTrip)
-        .then(() => {
-          alert("Trip updated successfully!");
-          editModal.hide();
-          currentEditKey = null;
-        })
-        .catch((error) => {
-          alert("Error updating trip: " + error.message);
+        rows.forEach(row => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="border px-2 py-2"><span class="type-badge ${row.typeClass}">${row.type}</span></td>
+            <td class="border px-2 py-2" title="${formatDate(row.date)}">${formatDate(row.date)}</td>
+            <td class="border px-2 py-2" title="${row.tripId}">${row.tripId}</td>
+            <td class="border px-2 py-2" title="${row.duty}">${row.duty}</td>
+            <td class="border px-2 py-2" title="${row.reference}">${row.reference}</td>
+            <td class="border px-2 py-2" title="${row.pickup}">${row.pickup}</td>
+            <td class="border px-2 py-2" title="${row.drop}">${row.drop}</td>
+            <td class="border px-2 py-2" title="${row.driver}">${row.driver}</td>
+            <td class="border px-2 py-2" title="${row.driverNumber}">${row.driverNumber}</td>
+            <td class="border px-2 py-2" title="${row.vehicle}">${row.vehicle}</td>
+            <td class="border px-2 py-2" title="${row.vehicleNumber}">${row.vehicleNumber}</td>
+            <td class="border px-2 py-2" title="${row.customer}">${row.customer}</td>
+            <td class="border px-2 py-2" title="${row.customerNumber}">${row.customerNumber}</td>
+            <td class="border px-2 py-2" title="${row.start}">${row.start}</td>
+            <td class="border px-2 py-2" title="${row.end}">${row.end}</td>
+            <td class="border px-2 py-2" title="${row.duration}">${row.duration}</td>
+            <td class="border px-2 py-2" title="${row.totalKm}">${row.totalKm}</td>
+            <td class="border px-2 py-2" title="${row.totalAmount}">${row.totalAmount}</td>
+            <td class="border px-2 py-2" title="${row.payment}">${row.payment}</td>
+            <td class="border px-2 py-2" title="${row.paidAmount}">${row.paidAmount}</td>
+            <td class="border px-2 py-2" title="${row.balanceAmount}">${row.balanceAmount}</td>
+            <td class="border px-2 py-2" title="${row.reason}">${row.reason}</td>
+            <td class="border px-2 py-2">
+              ${row.type === "Trip" ? `<button class="action-btn view-btn" data-type="trip" data-key="${row.key}"><i class="fas fa-eye"></i> View</button>` : ""}
+              <button class="action-btn delete-btn" data-type="${row.type}" data-key="${row.key}"><i class="fas fa-trash"></i> Delete</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
         });
-    });
-
-    // Delete trip by key
-    function deleteTrip(key) {
-      remove(ref(db, "trips/" + key))
-        .then(() => {
-          alert("Trip deleted successfully.");
-        })
-        .catch((error) => {
-          alert("Error deleting trip: " + error.message);
+        // Delete handler
+        tbody.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.onclick = async function() {
+            const key = this.getAttribute('data-key');
+            const type = this.getAttribute('data-type');
+            let path = "";
+            if (type === "Trip") path = `trips/${key}`;
+            else if (type === "No Duty" || type === "Vehicle Service") path = `nonTripDays/${key}`;
+            else if (type === "Driver Leave") path = `driverLeaves/${key}`;
+            if (path && confirm("Are you sure you want to delete this entry?")) {
+              await remove(ref(db, path));
+              loadMasterSummary();
+            }
+          };
         });
-    }
-
-    // Bulk delete selected trips
-    deleteSelectedBtn.onclick = () => {
-      const selected = [...document.querySelectorAll(".trip-select:checked")];
-      if (selected.length === 0) {
-        alert("Please select trips to delete.");
-        return;
-      }
-      if (confirm(`Are you sure you want to delete ${selected.length} selected trips?`)) {
-        selected.forEach((checkbox) => {
-          const key = checkbox.getAttribute("data-key");
-          deleteTrip(key);
+        // View handler (for trips)
+        tbody.querySelectorAll('.view-btn').forEach(btn => {
+          btn.onclick = function() {
+            const key = this.getAttribute('data-key');
+            const trip = allRows.find(r => r.key === key && r.type === "Trip").data;
+            showTripModal(trip);
+          };
         });
       }
-    };
+    }
 
-    // Select all toggle
-    selectAllCheckbox.addEventListener("change", () => {
-      const checked = selectAllCheckbox.checked;
-      document.querySelectorAll(".trip-select").forEach((chk) => {
-        chk.checked = checked;
-      });
-    });
-
-    // Filters event listeners
-    [driverFilter, vehicleFilter, startDateInput, endDateInput].forEach((elem) =>
-      elem.addEventListener("change", () => {
-        renderTrips(driverFilter.value, vehicleFilter.value);
-      })
-    );
-
-    // Export to Excel
-    exportExcelBtn.onclick = () => {
-      if (!allTrips.length) {
-        alert("No trips to export.");
-        return;
-      }
-      const wb = XLSX.utils.book_new();
-      const wsData = [
-        [
-          "Trip ID", "Date", "Duty", "Reference", "Pickup", "Drop",
-          "Customer Name", "Customer Number", "Driver Name", "Driver Number",
-          "Vehicle Model", "Vehicle Number", "Start Time", "End Time",
-          "Duration", "Extra Hours", "Start KM", "End KM", "Total KM", "Extra KM",
-          "Parking", "Toll", "Total Amount", "Payment Status", "Paid Amount", "Balance Amount"
-        ]
-      ];
-
-      allTrips.forEach(trip => {
-        wsData.push([
-          trip.bookingId, trip.date, trip.duty, trip.reference, trip.pickupLocation, trip.dropLocation,
-          trip.customerName, trip.customerNumber, trip.driverName, trip.driverNumber,
-          trip.vehicleModel, trip.vehicleNumber, trip.startTime, trip.endTime,
-          trip.duration, trip.extraHours, trip.startKm, trip.endKm, trip.totalKm, trip.extraKm,
-          trip.parking, trip.toll, trip.totalAmount, trip.paymentStatus, trip.paidAmount || "0", trip.balanceAmount || "0"
-        ]);
-      });
-
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      ws['!cols'] = Array(wsData[0].length).fill({ wch: 15 });
-      XLSX.utils.book_append_sheet(wb, ws, "Trips");
-      XLSX.writeFile(wb, "NST_Trips.xlsx");
-    };
-
-    // Export to PDF
-    exportPDFBtn.onclick = () => {
-      if (!allTrips.length) {
-        alert("No trips to export.");
-        return;
-      }
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF("landscape", "pt", "a4");
-
-      const columns = [
-        "Trip ID", "Date", "Duty", "Reference", "Pickup", "Drop",
-        "Customer Name", "Customer Number", "Driver Name", "Driver Number",
-        "Vehicle Model", "Vehicle Number", "Start Time", "End Time",
-        "Duration", "Extra Hours", "Start KM", "End KM", "Total KM", "Extra KM",
-        "Parking", "Toll", "Total Amount", "Payment Status", "Paid Amount", "Balance Amount"
-      ];
-
-      const rows = allTrips.map(trip => [
-        trip.bookingId, trip.date, trip.duty, trip.reference, trip.pickupLocation, trip.dropLocation,
-        trip.customerName, trip.customerNumber, trip.driverName, trip.driverNumber,
-        trip.vehicleModel, trip.vehicleNumber, trip.startTime, trip.endTime,
-        trip.duration, trip.extraHours, trip.startKm, trip.endKm, trip.totalKm, trip.extraKm,
-        trip.parking, trip.toll, trip.totalAmount, trip.paymentStatus, trip.paidAmount || "0", trip.balanceAmount || "0"
-      ]);
-
-      doc.setFontSize(14);
-      doc.text("NST Trip Summary", 40, 40);
-
-      doc.autoTable({
-        startY: 60,
-        head: [columns],
-        body: rows,
-        styles: { fontSize: 7, cellPadding: 3 },
-        headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: "bold" },
-        theme: "grid",
-        margin: { left: 20, right: 20 },
-        tableWidth: "auto",
-        didDrawPage: function (data) {
-          const pageCount = doc.internal.getNumberOfPages();
-          const pageCurrent = doc.internal.getCurrentPageInfo().pageNumber;
-          doc.setFontSize(8);
-          doc.text(`Page ${pageCurrent} of ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
-        },
-        columnStyles: {
-          0: { cellWidth: 50 },
-          1: { cellWidth: 60 },
-          2: { cellWidth: 50 },
-          3: { cellWidth: 50 },
-          4: { cellWidth: 50 },
-          5: { cellWidth: 50 },
+    function filterAndRender() {
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const type = document.getElementById("typeFilter").value;
+      let filtered = allRows.filter(row => {
+        if (type && row.type !== type) return false;
+        if (search) {
+          const values = Object.values(row).join(" ").toLowerCase();
+          return values.includes(search);
         }
+        return true;
       });
+      renderTable(filtered);
+    }
 
-      doc.save("NST_Trips.pdf");
+    async function loadMasterSummary() {
+      const tbody = document.getElementById("masterSummaryTable");
+      tbody.innerHTML = "<tr><td colspan='23' class='text-center py-4'>Loading...</td></tr>";
+      allRows = [];
+      try {
+        // Load trips
+        const tripsSnap = await get(child(dbRef, 'trips'));
+        if (tripsSnap.exists()) {
+          Object.entries(tripsSnap.val()).forEach(([key, trip]) => {
+            allRows.push({
+              type: "Trip",
+              typeClass: "type-trip",
+              key,
+              date: trip.date || "",
+              tripId: trip.bookingId || "",
+              duty: trip.duty || "",
+              reference: trip.reference || "",
+              pickup: trip.pickupLocation || "",
+              drop: trip.dropLocation || "",
+              driver: trip.driverName || "",
+              driverNumber: trip.driverNumber || "",
+              vehicle: trip.vehicleModel || "",
+              vehicleNumber: trip.vehicleNumber || "",
+              customer: trip.customerName || "",
+              customerNumber: trip.customerNumber || "",
+              start: trip.startTime || "",
+              end: trip.endTime || "",
+              duration: trip.duration || "",
+              totalKm: trip.totalKm || "",
+              totalAmount: trip.totalAmount || "",
+              payment: trip.paymentStatus || "",
+              paidAmount: trip.paidAmount || "",
+              balanceAmount: trip.balanceAmount || "",
+              reason: "",
+              data: trip
+            });
+          });
+        }
+        // Load nonTripDays
+        const nonTripSnap = await get(child(dbRef, 'nonTripDays'));
+        if (nonTripSnap.exists()) {
+          Object.entries(nonTripSnap.val()).forEach(([date, info]) => {
+            allRows.push({
+              type: info.status === "No Duty" ? "No Duty" : "Vehicle Service",
+              typeClass: info.status === "No Duty" ? "type-noduty" : "type-service",
+              key: date,
+              date: date,
+              tripId: "",
+              duty: "",
+              reference: "",
+              pickup: "",
+              drop: "",
+              driver: "",
+              driverNumber: "",
+              vehicle: info.vehicleModel || "",
+              vehicleNumber: info.vehicleNumber || "",
+              customer: "",
+              customerNumber: "",
+              start: "",
+              end: "",
+              duration: "",
+              totalKm: "",
+              totalAmount: "",
+              payment: "",
+              paidAmount: "",
+              balanceAmount: "",
+              reason: info.status,
+              data: info
+            });
+          });
+        }
+        // Load driverLeaves
+        const leaveSnap = await get(child(dbRef, 'driverLeaves'));
+        if (leaveSnap.exists()) {
+          Object.entries(leaveSnap.val()).forEach(([key, info]) => {
+            const [date] = key.split("_");
+            allRows.push({
+              type: "Driver Leave",
+              typeClass: "type-leave",
+              key,
+              date: date,
+              tripId: "",
+              duty: "",
+              reference: "",
+              pickup: "",
+              drop: "",
+              driver: info.driverName || "",
+              driverNumber: info.driverNumber || "",
+              vehicle: "",
+              vehicleNumber: "",
+              customer: "",
+              customerNumber: "",
+              start: "",
+              end: "",
+              duration: "",
+              totalKm: "",
+              totalAmount: "",
+              payment: "",
+              paidAmount: "",
+              balanceAmount: "",
+              reason: info.reason || "",
+              data: info
+            });
+          });
+        }
+        // Sort by date ascending
+        allRows.sort((a, b) => padDate(a.date).localeCompare(padDate(b.date)));
+        filterAndRender();
+      } catch (error) {
+        tbody.innerHTML = "<tr><td colspan='23' class='text-center py-4'>Error loading data.</td></tr>";
+      }
+    }
+
+    document.getElementById("searchInput").addEventListener("input", filterAndRender);
+    document.getElementById("typeFilter").addEventListener("change", filterAndRender);
+
+    // Export to CSV/Excel
+    document.getElementById("exportBtn").addEventListener("click", function() {
+      if (!lastFilteredRows || lastFilteredRows.length === 0) {
+        alert("No data to export.");
+        return;
+      }
+      const headers = [
+        "Type","Date","Trip ID","Duty","Reference","Pickup","Drop","Driver","Driver Number","Vehicle","Vehicle Number","Customer","Customer Number","Start","End","Duration","Total KM","Total (₹)","Payment","Paid (₹)","Balance (₹)","Reason/Status"
+      ];
+      const csvRows = [headers.join(",")];
+      lastFilteredRows.forEach(row => {
+        csvRows.push([
+          row.type,
+          formatDate(row.date),
+          row.tripId,
+          row.duty,
+          row.reference,
+          row.pickup,
+          row.drop,
+          row.driver,
+          row.driverNumber,
+          row.vehicle,
+          row.vehicleNumber,
+          row.customer,
+          row.customerNumber,
+          row.start,
+          row.end,
+          row.duration,
+          row.totalKm,
+          row.totalAmount,
+          row.payment,
+          row.paidAmount,
+          row.balanceAmount,
+          row.reason
+        ].map(v => `"${(v||"").replace(/"/g, '""')}"`).join(","));
+      });
+      const csvContent = csvRows.join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "NST-Trips-Summary.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Export to PDF (all columns, all pages)
+    document.getElementById("pdfBtn").addEventListener("click", function() {
+      if (!lastFilteredRows || lastFilteredRows.length === 0) {
+        alert("No data to export.");
+        return;
+      }
+      const headers = [
+        "Type","Date","Trip ID","Duty","Reference","Pickup","Drop","Driver","Driver Number","Vehicle","Vehicle Number","Customer","Customer Number","Start","End","Duration","Total KM","Total (₹)","Payment","Paid (₹)","Balance (₹)","Reason/Status"
+      ];
+      const data = lastFilteredRows.map(row => [
+        row.type,
+        formatDate(row.date),
+        row.tripId,
+        row.duty,
+        row.reference,
+        row.pickup,
+        row.drop,
+        row.driver,
+        row.driverNumber,
+        row.vehicle,
+        row.vehicleNumber,
+        row.customer,
+        row.customerNumber,
+        row.start,
+        row.end,
+        row.duration,
+        row.totalKm,
+        row.totalAmount,
+        row.payment,
+        row.paidAmount,
+        row.balanceAmount,
+        row.reason
+      ]);
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "A4" });
+      doc.text("NST Travels - Master Summary", 40, 30);
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: 40,
+        styles: { fontSize: 7, cellWidth: 'auto', overflow: 'linebreak' },
+        headStyles: { fillColor: [59, 130, 246] },
+        margin: { left: 10, right: 10 }
+      });
+      doc.save("NST-Trips-Summary.pdf");
+    });
+
+    // Modal logic
+    function showTripModal(trip) {
+      const modalBg = document.getElementById("tripModalBg");
+      const modalTable = document.getElementById("tripModalTable");
+      modalTable.innerHTML = `
+        <tr><td><b>Trip ID</b></td><td>${trip.bookingId || ""}</td></tr>
+        <tr><td><b>Date</b></td><td>${formatDate(trip.date) || ""}</td></tr>
+        <tr><td><b>Duty</b></td><td>${trip.duty || ""}</td></tr>
+        <tr><td><b>Reference</b></td><td>${trip.reference || ""}</td></tr>
+        <tr><td><b>Pickup</b></td><td>${trip.pickupLocation || ""}</td></tr>
+        <tr><td><b>Drop</b></td><td>${trip.dropLocation || ""}</td></tr>
+        <tr><td><b>Customer</b></td><td>${trip.customerName || ""} (${trip.customerNumber || ""})</td></tr>
+        <tr><td><b>Driver</b></td><td>${trip.driverName || ""} (${trip.driverNumber || ""})</td></tr>
+        <tr><td><b>Vehicle</b></td><td>${trip.vehicleModel || ""} (${trip.vehicleNumber || ""})</td></tr>
+        <tr><td><b>Start</b></td><td>${trip.startTime || ""}</td></tr>
+        <tr><td><b>End</b></td><td>${trip.endTime || ""}</td></tr>
+        <tr><td><b>Duration</b></td><td>${trip.duration || ""}</td></tr>
+        <tr><td><b>Total KM</b></td><td>${trip.totalKm || ""}</td></tr>
+        <tr><td><b>Total Amount</b></td><td>₹${trip.totalAmount || ""}</td></tr>
+        <tr><td><b>Payment</b></td><td>${trip.paymentStatus || ""}</td></tr>
+        <tr><td><b>Paid</b></td><td>₹${trip.paidAmount || ""}</td></tr>
+        <tr><td><b>Balance</b></td><td>₹${trip.balanceAmount || ""}</td></tr>
+      `;
+      modalBg.classList.add("active");
+    }
+    document.getElementById("modalCloseBtn").onclick = function() {
+      document.getElementById("tripModalBg").classList.remove("active");
+    };
+    document.getElementById("tripModalBg").onclick = function(e) {
+      if (e.target === this) this.classList.remove("active");
     };
 
-    // WhatsApp share trip details
-    function shareTripWhatsApp(key) {
-      const trip = getTripByKey(key);
-      if (!trip) return alert("Trip data not found.");
-
-      const message = `
-📋 *${trip.bookingId} - NST Trip Summary*
-
-🗓 TRIP DETAILS
-• Trip ID: ${trip.bookingId}
-• Date: ${trip.date}
-• Duty: ${trip.duty}
-• Reference: ${trip.reference}
-
-📍 LOCATIONS
-• Pickup: ${trip.pickupLocation}
-• Drop: ${trip.dropLocation}
-
-👤 CUSTOMER INFO
-• Name: ${trip.customerName}
-• Number: ${trip.customerNumber}
-
-👨‍✈ DRIVER INFO
-• Name: ${trip.driverName}
-• Number: ${trip.driverNumber}
-
-🚘 VEHICLE INFO
-• Model: ${trip.vehicleModel}
-• Number: ${trip.vehicleNumber}
-
-🕒 TIME DETAILS
-• Start Time: ${formatTime12h(trip.startTime)}
-• End Time: ${formatTime12h(trip.endTime)}
-• Duration: ${trip.duration} hrs
-• Extra Hours: ${trip.extraHours}
-
-📏 DISTANCE DETAILS
-• Start KM: ${trip.startKm}
-• End KM: ${trip.endKm}
-• Total KM: ${trip.totalKm} km
-• Extra KM: ${trip.extraKm}
-
-💰 FARE DETAILS
-• Parking: ₹${trip.parking}
-• Toll: ₹${trip.toll}
-• Total Amount: ₹${trip.totalAmount}
-• Payment Status: ${trip.paymentStatus}
-${trip.paymentStatus === "Paid" || trip.paymentStatus === "Partially Paid" ? `• Paid Amount: ₹${trip.paidAmount || "0"}` : ""}
-${trip.paymentStatus === "Partially Paid" ? `• Balance Amount: ₹${trip.balanceAmount || "0"}` : ""}
-      `.trim();
-
-      const url = "https://wa.me/?text=" + encodeURIComponent(message);
-      window.open(url, "_blank");
-    }
+    window.addEventListener("DOMContentLoaded", loadMasterSummary);
   </script>
-
-  <!-- jsPDF and jsPDF AutoTable -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-
-  <!-- SheetJS -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </body>
 </html>
