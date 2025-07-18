@@ -335,6 +335,50 @@
     </table>
   </div>
 
+  <!-- Mark Driver Leave Section -->
+  <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-8 bg-gray-50 rounded-lg shadow">
+    <h3 class="text-2xl font-bold text-gray-900 mb-4"><i class="fas fa-user-times mr-2"></i> Mark Driver Leave</h3>
+    <form id="driverLeaveForm" class="space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div>
+          <label for="leaveDate" class="form-label block mb-1">Date</label>
+          <input type="date" class="input-field w-full" id="leaveDate" required />
+        </div>
+        <div>
+          <label for="leaveDriver" class="form-label block mb-1">Driver</label>
+          <select class="select-field w-full" id="leaveDriver" required>
+            <option value="" selected disabled>Select Driver</option>
+          </select>
+        </div>
+        <div>
+          <label for="leaveReason" class="form-label block mb-1">Reason</label>
+          <input type="text" class="input-field w-full" id="leaveReason" placeholder="Reason for leave" required />
+        </div>
+      </div>
+      <button type="submit" class="btn bg-yellow-600 text-white w-full py-2 rounded-md hover:bg-yellow-700">
+        <i class="fas fa-save mr-2"></i> Save Driver Leave
+      </button>
+    </form>
+  </div>
+
+  <!-- Driver Leaves List Section -->
+  <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-8 bg-gray-50 rounded-lg shadow">
+    <h3 class="text-2xl font-bold text-gray-900 mb-4"><i class="fas fa-list mr-2"></i> Driver Leaves List</h3>
+    <table class="min-w-full bg-white rounded-lg shadow">
+      <thead>
+        <tr>
+          <th class="px-4 py-2">Date</th>
+          <th class="px-4 py-2">Driver</th>
+          <th class="px-4 py-2">Number</th>
+          <th class="px-4 py-2">Reason</th>
+        </tr>
+      </thead>
+      <tbody id="driverLeavesTable">
+        <!-- Entries will be populated here -->
+      </tbody>
+    </table>
+  </div>
+
   <!-- Footer -->
   <footer class="bg-gray-800 text-white py-6 mt-auto">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -612,10 +656,85 @@
       }
     }
 
+    // Load drivers for leave form
+    async function loadLeaveDrivers() {
+      try {
+        const snap = await get(child(dbRef, 'drivers'));
+        const select = document.getElementById("leaveDriver");
+        select.innerHTML = '<option value="" selected disabled>Select Driver</option>';
+        if (snap.exists()) {
+          const data = snap.val();
+          Object.values(data).forEach(d => {
+            const opt = document.createElement("option");
+            opt.value = d.name + "||" + d.number;
+            opt.text = d.name;
+            opt.setAttribute("data-number", d.number || "");
+            select.appendChild(opt);
+          });
+        }
+      } catch (error) {
+        console.error("Error loading drivers for leave:", error);
+      }
+    }
+
+    // Save driver leave
+    document.getElementById("driverLeaveForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const date = document.getElementById("leaveDate").value;
+      const driverValue = document.getElementById("leaveDriver").value;
+      const reason = document.getElementById("leaveReason").value;
+      if (!date || !driverValue || !reason) {
+        alert("Please fill all fields.");
+        return;
+      }
+      const [driverName, driverNumber] = driverValue.split("||");
+      try {
+        await set(ref(db, `driverLeaves/${date}_${driverName}`), {
+          driverName,
+          driverNumber,
+          reason
+        });
+        alert("Driver leave saved!");
+        loadDriverLeaves();
+        e.target.reset();
+      } catch (error) {
+        alert("Failed to save driver leave.");
+      }
+    });
+
+    // Load driver leaves list
+    async function loadDriverLeaves() {
+      const tbody = document.getElementById("driverLeavesTable");
+      tbody.innerHTML = "";
+      try {
+        const snap = await get(child(dbRef, 'driverLeaves'));
+        if (snap.exists()) {
+          const data = snap.val();
+          Object.entries(data).forEach(([key, info]) => {
+            // key is date_driverName
+            const [date, ...driverParts] = key.split("_");
+            const driverName = driverParts.join("_");
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td class="border px-4 py-2">${date}</td>
+              <td class="border px-4 py-2">${info.driverName || ""}</td>
+              <td class="border px-4 py-2">${info.driverNumber || ""}</td>
+              <td class="border px-4 py-2">${info.reason || ""}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          tbody.innerHTML = `<tr><td colspan="4" class="text-center px-4 py-2">No entries</td></tr>`;
+        }
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center px-4 py-2">Error loading data</td></tr>`;
+      }
+    }
+
     window.addEventListener("DOMContentLoaded", async () => {
       try {
         document.getElementById("bookingId").value = await generateTripId();
-        await Promise.all([loadDrivers(), loadVehicles(), loadNonTripVehicles()]);
+        await Promise.all([loadDrivers(), loadVehicles(), loadNonTripVehicles(), loadLeaveDrivers()]);
         document.getElementById("startTime").addEventListener("change", calcDuration);
         document.getElementById("endTime").addEventListener("change", calcDuration);
         document.getElementById("startKm").addEventListener("input", calcTotalKm);
@@ -640,6 +759,7 @@
         });
         handlePaymentStatusChange();
         await loadNonTripDays();
+        await loadDriverLeaves();
       } catch (error) {
         console.error("Error initializing form:", error);
         alert("⚠️ Failed to initialize form. Please refresh the page.");
