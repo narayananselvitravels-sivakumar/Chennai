@@ -22,11 +22,13 @@
       text-overflow: ellipsis;
       vertical-align: middle;
     }
-    .action-btn { margin: 0 2px; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none;}
+    .action-btn { margin: 0 2px; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none; display: inline-block !important; }
     .delete-btn { background: #ef4444; color: #fff; }
     .delete-btn:hover { background: #dc2626; }
     .view-btn { background: #3b82f6; color: #fff; }
     .view-btn:hover { background: #2563eb; }
+    .edit-btn { background: #f59e0b; color: #fff; }
+    .edit-btn:hover { background: #d97706; }
     .type-badge { padding: 0.2em 0.6em; border-radius: 0.3em; font-size: 0.95em; font-weight: 700; }
     .type-trip { background: #dbeafe; color: #1e40af; }
     .type-noduty { background: #fef9c3; color: #b45309; }
@@ -43,9 +45,16 @@
     .modal-content table { width: 100%; }
     .modal-content td { padding: 0.3em 0.5em; }
     .modal-close { float: right; font-size: 1.5rem; color: #ef4444; cursor: pointer; }
+    .modal-form input, .modal-form select { width: 100%; padding: 0.5rem; margin: 0.5rem 0; border: 1px solid #d1d5db; border-radius: 0.25rem; }
+    .modal-form button { margin-top: 1rem; padding: 0.5rem 1rem; border-radius: 0.25rem; font-weight: 600; cursor: pointer; }
+    .save-btn { background: #22c55e; color: #fff; }
+    .save-btn:hover { background: #16a34a; }
+    .cancel-btn { background: #6b7280; color: #fff; }
+    .cancel-btn:hover { background: #4b5563; }
     @media (max-width: 600px) {
       .modal-content { padding: 1rem; }
       th, td { min-width: 80px; }
+      .action-btn { font-size: 0.75rem; padding: 0.15rem 0.3rem; }
     }
   </style>
 </head>
@@ -100,18 +109,23 @@
     </div>
   </div>
 
-  <!-- Modal for Trip View -->
-  <div id="tripModalBg" class="modal-bg">
+  <!-- Modal for View/Edit -->
+  <div id="modalBg" class="modal-bg">
     <div class="modal-content">
-      <span class="modal-close" id="modalCloseBtn">&times;</span>
-      <h3>Trip Details</h3>
-      <table id="tripModalTable"></table>
+      <span class="modal-close" id="modalCloseBtn">×</span>
+      <h3 id="modalTitle">Details</h3>
+      <div id="modalContent">
+        <table id="modalTable"></table>
+        <form id="editForm" class="modal-form" style="display: none;">
+          <!-- Dynamic form fields will be populated here -->
+        </form>
+      </div>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, child, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, child, get, remove, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
     const firebaseConfig = {
       apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
       authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
@@ -171,8 +185,9 @@
             <td class="border px-2 py-2" title="${row.paidAmount}">${row.paidAmount}</td>
             <td class="border px-2 py-2" title="${row.balanceAmount}">${row.balanceAmount}</td>
             <td class="border px-2 py-2" title="${row.reason}">${row.reason}</td>
-            <td class="border px-2 py-2">
-              ${row.type === "Trip" ? `<button class="action-btn view-btn" data-type="trip" data-key="${row.key}"><i class="fas fa-eye"></i> View</button>` : ""}
+            <td class="border px-2 py-2" style="min-width: 200px;">
+              <button class="action-btn view-btn" data-type="${row.type}" data-key="${row.key}"><i class="fas fa-eye"></i> View</button>
+              <button class="action-btn edit-btn" data-type="${row.type}" data-key="${row.key}"><i class="fas fa-edit"></i> Edit</button>
               <button class="action-btn delete-btn" data-type="${row.type}" data-key="${row.key}"><i class="fas fa-trash"></i> Delete</button>
             </td>
           `;
@@ -193,12 +208,22 @@
             }
           };
         });
-        // View handler (for trips)
+        // View handler
         tbody.querySelectorAll('.view-btn').forEach(btn => {
           btn.onclick = function() {
             const key = this.getAttribute('data-key');
-            const trip = allRows.find(r => r.key === key && r.type === "Trip").data;
-            showTripModal(trip);
+            const type = this.getAttribute('data-type');
+            const data = allRows.find(r => r.key === key && r.type === type).data;
+            showModal(data, 'view', type, key);
+          };
+        });
+        // Edit handler
+        tbody.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.onclick = function() {
+            const key = this.getAttribute('data-key');
+            const type = this.getAttribute('data-type');
+            const data = allRows.find(r => r.key === key && r.type === type).data;
+            showModal(data, 'edit', type, key);
           };
         });
       }
@@ -382,7 +407,7 @@
       URL.revokeObjectURL(url);
     });
 
-    // Export to PDF (all columns, all pages)
+    // Export to PDF
     document.getElementById("pdfBtn").addEventListener("click", function() {
       if (!lastFilteredRows || lastFilteredRows.length === 0) {
         alert("No data to export.");
@@ -430,34 +455,240 @@
     });
 
     // Modal logic
-    function showTripModal(trip) {
-      const modalBg = document.getElementById("tripModalBg");
-      const modalTable = document.getElementById("tripModalTable");
-      modalTable.innerHTML = `
-        <tr><td><b>Trip ID</b></td><td>${trip.bookingId || ""}</td></tr>
-        <tr><td><b>Date</b></td><td>${formatDate(trip.date) || ""}</td></tr>
-        <tr><td><b>Duty</b></td><td>${trip.duty || ""}</td></tr>
-        <tr><td><b>Reference</b></td><td>${trip.reference || ""}</td></tr>
-        <tr><td><b>Pickup</b></td><td>${trip.pickupLocation || ""}</td></tr>
-        <tr><td><b>Drop</b></td><td>${trip.dropLocation || ""}</td></tr>
-        <tr><td><b>Customer</b></td><td>${trip.customerName || ""} (${trip.customerNumber || ""})</td></tr>
-        <tr><td><b>Driver</b></td><td>${trip.driverName || ""} (${trip.driverNumber || ""})</td></tr>
-        <tr><td><b>Vehicle</b></td><td>${trip.vehicleModel || ""} (${trip.vehicleNumber || ""})</td></tr>
-        <tr><td><b>Start</b></td><td>${trip.startTime || ""}</td></tr>
-        <tr><td><b>End</b></td><td>${trip.endTime || ""}</td></tr>
-        <tr><td><b>Duration</b></td><td>${trip.duration || ""}</td></tr>
-        <tr><td><b>Total KM</b></td><td>${trip.totalKm || ""}</td></tr>
-        <tr><td><b>Total Amount</b></td><td>₹${trip.totalAmount || ""}</td></tr>
-        <tr><td><b>Payment</b></td><td>${trip.paymentStatus || ""}</td></tr>
-        <tr><td><b>Paid</b></td><td>₹${trip.paidAmount || ""}</td></tr>
-        <tr><td><b>Balance</b></td><td>₹${trip.balanceAmount || ""}</td></tr>
-      `;
+    function showModal(data, mode = 'view', type, key) {
+      const modalBg = document.getElementById("modalBg");
+      const modalTitle = document.getElementById("modalTitle");
+      const modalTable = document.getElementById("modalTable");
+      const editForm = document.getElementById("editForm");
+      
+      if (mode === 'view' && type === "Trip") {
+        modalTitle.textContent = "Trip Details";
+        editForm.style.display = "none";
+        modalTable.style.display = "table";
+        modalTable.innerHTML = `
+          <tr><td><b>Trip ID</b></td><td>${data.bookingId || ""}</td></tr>
+          <tr><td><b>Date</b></td><td>${formatDate(data.date) || ""}</td></tr>
+          <tr><td><b>Duty</b></td><td>${data.duty || ""}</td></tr>
+          <tr><td><b>Reference</b></td><td>${data.reference || ""}</td></tr>
+          <tr><td><b>Pickup</b></td><td>${data.pickupLocation || ""}</td></tr>
+          <tr><td><b>Drop</b></td><td>${data.dropLocation || ""}</td></tr>
+          <tr><td><b>Customer</b></td><td>${data.customerName || ""} (${data.customerNumber || ""})</td></tr>
+          <tr><td><b>Driver</b></td><td>${data.driverName || ""} (${data.driverNumber || ""})</td></tr>
+          <tr><td><b>Vehicle</b></td><td>${data.vehicleModel || ""} (${data.vehicleNumber || ""})</td></tr>
+          <tr><td><b>Start</b></td><td>${data.startTime || ""}</td></tr>
+          <tr><td><b>End</b></td><td>${data.endTime || ""}</td></tr>
+          <tr><td><b>Duration</b></td><td>${data.duration || ""}</td></tr>
+          <tr><td><b>Total KM</b></td><td>${data.totalKm || ""}</td></tr>
+          <tr><td><b>Total Amount</b></td><td>₹${data.totalAmount || ""}</td></tr>
+          <tr><td><b>Payment</b></td><td>${data.paymentStatus || ""}</td></tr>
+          <td><b>Paid</b></td><td>₹${data.paidAmount || ""}</td></tr>
+          <tr><td><b>Balance</b></td><td>₹${data.balanceAmount || ""}</td></tr>
+        `;
+      } else if (mode === 'edit') {
+        modalTitle.textContent = `Edit ${type}`;
+        modalTable.style.display = "none";
+        editForm.style.display = "block";
+        editForm.innerHTML = "";
+        
+        if (type === "Trip") {
+          editForm.innerHTML = `
+            <div>
+              <label>Trip ID</label>
+              <input type="text" id="editBookingId" value="${data.bookingId || ""}" readonly />
+            </div>
+            <div>
+              <label>Date</label>
+              <input type="date" id="editDate" value="${data.date || ""}" />
+            </div>
+            <div>
+              <label>Duty</label>
+              <input type="text" id="editDuty" value="${data.duty || ""}" />
+            </div>
+            <div>
+              <label>Reference</label>
+              <input type="text" id="editReference" value="${data.reference || ""}" />
+            </div>
+            <div>
+              <label>Pickup Location</label>
+              <input type="text" id="editPickupLocation" value="${data.pickupLocation || ""}" />
+            </div>
+            <div>
+              <label>Drop Location</label>
+              <input type="text" id="editDropLocation" value="${data.dropLocation || ""}" />
+            </div>
+            <div>
+              <label>Customer Name</label>
+              <input type="text" id="editCustomerName" value="${data.customerName || ""}" />
+            </div>
+            <div>
+              <label>Customer Number</label>
+              <input type="text" id="editCustomerNumber" value="${data.customerNumber || ""}" />
+            </div>
+            <div>
+              <label>Driver Name</label>
+              <input type="text" id="editDriverName" value="${data.driverName || ""}" />
+            </div>
+            <div>
+              <label>Driver Number</label>
+              <input type="text" id="editDriverNumber" value="${data.driverNumber || ""}" />
+            </div>
+            <div>
+              <label>Vehicle Model</label>
+              <input type="text" id="editVehicleModel" value="${data.vehicleModel || ""}" />
+            </div>
+            <div>
+              <label>Vehicle Number</label>
+              <input type="text" id="editVehicleNumber" value="${data.vehicleNumber || ""}" />
+            </div>
+            <div>
+              <label>Start Time</label>
+              <input type="time" id="editStartTime" value="${data.startTime || ""}" />
+            </div>
+            <div>
+              <label>End Time</label>
+              <input type="time" id="editEndTime" value="${data.endTime || ""}" />
+            </div>
+            <div>
+              <label>Duration</label>
+              <input type="text" id="editDuration" value="${data.duration || ""}" />
+            </div>
+            <div>
+              <label>Total KM</label>
+              <input type="number" id="editTotalKm" value="${data.totalKm || ""}" />
+            </div>
+            <div>
+              <label>Total Amount (₹)</label>
+              <input type="number" id="editTotalAmount" value="${data.totalAmount || ""}" />
+            </div>
+            <div>
+              <label>Payment Status</label>
+              <select id="editPaymentStatus">
+                <option value="Pending" ${data.paymentStatus === "Pending" ? "selected" : ""}>Pending</option>
+                <option value="Paid" ${data.paymentStatus === "Paid" ? "selected" : ""}>Paid</option>
+                <option value="Partial" ${data.paymentStatus === "Partial" ? "selected" : ""}>Partial</option>
+              </select>
+            </div>
+            <div>
+              <label>Paid Amount (₹)</label>
+              <input type="number" id="editPaidAmount" value="${data.paidAmount || ""}" />
+            </div>
+            <div>
+              <label>Balance Amount (₹)</label>
+              <input type="number" id="editBalanceAmount" value="${data.balanceAmount || ""}" />
+            </div>
+          `;
+        } else if (type === "No Duty" || type === "Vehicle Service") {
+          editForm.innerHTML = `
+            <div>
+              <label>Date</label>
+              <input type="date" id="editDate" value="${data.date || ""}" readonly />
+            </div>
+            <div>
+              <label>Status</label>
+              <select id="editStatus">
+                <option value="No Duty" ${data.status === "No Duty" ? "selected" : ""}>No Duty</option>
+                <option value="Vehicle Service" ${data.status === "Vehicle Service" ? "selected" : ""}>Vehicle Service</option>
+              </select>
+            </div>
+            <div>
+              <label>Vehicle Model</label>
+              <input type="text" id="editVehicleModel" value="${data.vehicleModel || ""}" />
+            </div>
+            <div>
+              <label>Vehicle Number</label>
+              <input type="text" id="editVehicleNumber" value="${data.vehicleNumber || ""}" />
+            </div>
+          `;
+        } else if (type === "Driver Leave") {
+          editForm.innerHTML = `
+            <div>
+              <label>Date</label>
+              <input type="date" id="editDate" value="${data.date || ""}" readonly />
+            </div>
+            <div>
+              <label>Driver Name</label>
+              <input type="text" id="editDriverName" value="${data.driverName || ""}" />
+            </div>
+            <div>
+              <label>Driver Number</label>
+              <input type="text" id="editDriverNumber" value="${data.driverNumber || ""}" />
+            </div>
+            <div>
+              <label>Reason</label>
+              <input type="text" id="editReason" value="${data.reason || ""}" />
+            </div>
+          `;
+        }
+        editForm.innerHTML += `
+          <button type="button" class="save-btn" id="saveEditBtn">Save</button>
+          <button type="button" class="cancel-btn" id="cancelEditBtn">Cancel</button>
+        `;
+        // Save button handler
+        document.getElementById("saveEditBtn").onclick = async function() {
+          let updatedData = {};
+          let path = "";
+          if (type === "Trip") {
+            updatedData = {
+              bookingId: document.getElementById("editBookingId").value,
+              date: document.getElementById("editDate").value,
+              duty: document.getElementById("editDuty").value,
+              reference: document.getElementById("editReference").value,
+              pickupLocation: document.getElementById("editPickupLocation").value,
+              dropLocation: document.getElementById("editDropLocation").value,
+              customerName: document.getElementById("editCustomerName").value,
+              customerNumber: document.getElementById("editCustomerNumber").value,
+              driverName: document.getElementById("editDriverName").value,
+              driverNumber: document.getElementById("editDriverNumber").value,
+              vehicleModel: document.getElementById("editVehicleModel").value,
+              vehicleNumber: document.getElementById("editVehicleNumber").value,
+              startTime: document.getElementById("editStartTime").value,
+              endTime: document.getElementById("editEndTime").value,
+              duration: document.getElementById("editDuration").value,
+              totalKm: document.getElementById("editTotalKm").value,
+              totalAmount: document.getElementById("editTotalAmount").value,
+              paymentStatus: document.getElementById("editPaymentStatus").value,
+              paidAmount: document.getElementById("editPaidAmount").value,
+              balanceAmount: document.getElementById("editBalanceAmount").value
+            };
+            path = `trips/${key}`;
+          } else if (type === "No Duty" || type === "Vehicle Service") {
+            updatedData = {
+              date: document.getElementById("editDate").value,
+              status: document.getElementById("editStatus").value,
+              vehicleModel: document.getElementById("editVehicleModel").value,
+              vehicleNumber: document.getElementById("editVehicleNumber").value
+            };
+            path = `nonTripDays/${key}`;
+          } else if (type === "Driver Leave") {
+            updatedData = {
+              date: document.getElementById("editDate").value,
+              driverName: document.getElementById("editDriverName").value,
+              driverNumber: document.getElementById("editDriverNumber").value,
+              reason: document.getElementById("editReason").value
+            };
+            path = `driverLeaves/${key}`;
+          }
+          try {
+            await set(ref(db, path), updatedData);
+            alert(`${type} updated successfully!`);
+            modalBg.classList.remove("active");
+            loadMasterSummary();
+          } catch (error) {
+            alert(`Error updating ${type}: ` + error.message);
+          }
+        };
+        // Cancel button handler
+        document.getElementById("cancelEditBtn").onclick = function() {
+          modalBg.classList.remove("active");
+        };
+      }
       modalBg.classList.add("active");
     }
+
     document.getElementById("modalCloseBtn").onclick = function() {
-      document.getElementById("tripModalBg").classList.remove("active");
+      document.getElementById("modalBg").classList.remove("active");
     };
-    document.getElementById("tripModalBg").onclick = function(e) {
+    document.getElementById("modalBg").onclick = function(e) {
       if (e.target === this) this.classList.remove("active");
     };
 
