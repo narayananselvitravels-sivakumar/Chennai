@@ -142,14 +142,22 @@
       <!-- Trip Details -->
       <div>
         <h5 class="section-heading"><i class="fas fa-calendar-alt mr-2"></i> Trip Details</h5>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label for="bookingId" class="form-label block mb-1">Trip ID</label>
             <input type="text" class="input-field w-full" id="bookingId" readonly aria-label="Trip ID" />
           </div>
           <div>
-            <label for="date" class="form-label block mb-1">Date</label>
-            <input type="date" class="input-field w-full" id="date" aria-label="Date" />
+            <label for="date" class="form-label block mb-1">Start Date</label>
+            <input type="date" class="input-field w-full" id="date" aria-label="Start Date" />
+          </div>
+          <div>
+            <label for="endDate" class="form-label block mb-1">End Date</label>
+            <input type="date" class="input-field w-full" id="endDate" aria-label="End Date" disabled />
+          </div>
+          <div class="flex items-center">
+            <input type="checkbox" id="isPackageTrip" class="mr-2" />
+            <label for="isPackageTrip" class="form-label">Package Trip</label>
           </div>
           <div>
             <label for="duty" class="form-label block mb-1">Duty</label>
@@ -454,7 +462,6 @@
     }
 
     function timeToMinutes(timeStr) {
-      // Parse time string in format "HH:MM" (24-hour format from input type="time")
       const [hours, minutes] = timeStr.split(":").map(Number);
       return hours * 60 + minutes;
     }
@@ -512,7 +519,6 @@
       }
     }
 
-    // Load unique duties for the datalist
     async function loadDuties() {
       try {
         const snap = await get(child(dbRef, 'trips'));
@@ -605,7 +611,6 @@
             tbody.appendChild(tr);
           });
 
-          // Add event listeners for edit/delete
           tbody.querySelectorAll('.edit-btn').forEach(btn => {
             btn.onclick = async function() {
               const date = this.getAttribute('data-date');
@@ -709,7 +714,6 @@
             tbody.appendChild(tr);
           });
 
-          // Add event listeners for edit/delete
           tbody.querySelectorAll('.edit-btn').forEach(btn => {
             btn.onclick = async function() {
               const key = this.getAttribute('data-key');
@@ -762,6 +766,13 @@
         document.getElementById("paymentStatus").addEventListener("change", handlePaymentStatusChange);
         document.getElementById("paidAmount").addEventListener("input", updateBalanceAmount);
         document.getElementById("totalAmount").addEventListener("input", updateBalanceAmount);
+        document.getElementById("isPackageTrip").addEventListener("change", function () {
+          document.getElementById("endDate").disabled = !this.checked;
+          if (!this.checked) {
+            document.getElementById("endDate").value = "";
+            calcDuration(); // Recalculate duration for single-day trip
+          }
+        });
         const resetFlagRef = ref(db, 'tripResetFlag/');
         onValue(resetFlagRef, async (snapshot) => {
           const flag = snapshot.val();
@@ -781,27 +792,26 @@
       const start = document.getElementById("startTime").value;
       const end = document.getElementById("endTime").value;
       const durationInput = document.getElementById("duration");
+      const isPackageTrip = document.getElementById("isPackageTrip").checked;
       
-      // Only calculate duration if both start and end times are selected
-      if (start && end) {
+      if (isPackageTrip) {
+        // For package trips, allow manual duration input
+        durationInput.readOnly = false;
+      } else if (start && end) {
+        // Single-day trip: calculate duration
         let startMinutes = timeToMinutes(start);
         let endMinutes = timeToMinutes(end);
-        
-        // Handle case where end time is on the next day (e.g., 9:30 PM to 1:30 AM)
         if (endMinutes < startMinutes) {
-          endMinutes += 24 * 60; // Add 24 hours in minutes
+          endMinutes += 24 * 60;
         }
-        
         const durationMinutes = endMinutes - startMinutes;
         const hours = Math.floor(durationMinutes / 60);
         const minutes = durationMinutes % 60;
-        
-        // Format as "X hours Y minutes" or just "X hours" if minutes are 0
         durationInput.value = minutes > 0 ? `${hours} hours ${minutes} minutes` : `${hours} hours`;
-        durationInput.readOnly = true; // Make readonly when calculated
+        durationInput.readOnly = true;
       } else {
-        // Allow manual input when either start or end time is not selected
-        durationInput.readOnly = false; // Remove readonly for manual input
+        // Allow manual input if times are not selected
+        durationInput.readOnly = false;
       }
     }
 
@@ -842,18 +852,49 @@
       }
     }
 
+    function getDatesInRange(startDate, endDate) {
+      const dates = [];
+      let currentDate = new Date(startDate);
+      const end = new Date(endDate);
+      while (currentDate <= end) {
+        dates.push(new Date(currentDate).toISOString().split('T')[0]);
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      return dates;
+    }
+
     document.getElementById("tripForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const form = e.target;
       const driverName = document.getElementById("driverName").value;
       const vehicleModel = document.getElementById("vehicleModel").value;
+      const isPackageTrip = document.getElementById("isPackageTrip").checked;
+      const startDate = document.getElementById("date").value;
+      const endDate = document.getElementById("endDate").value;
+
       if (!driverName || !vehicleModel) {
         alert("❌ Please select a driver and vehicle.");
         return;
       }
+      if (isPackageTrip && (!startDate || !endDate)) {
+        alert("❌ Please provide both start and end dates for a package trip.");
+        return;
+      }
+      if (isPackageTrip && new Date(endDate) < new Date(startDate)) {
+        alert("❌ End date must be on or after start date.");
+        return;
+      }
+
+      const bookingId = document.getElementById("bookingId").value;
+      if (await tripIdExists(bookingId)) {
+        alert("❌ Trip ID already exists. Cannot save.");
+        return;
+      }
+
       const data = {
-        bookingId: document.getElementById("bookingId").value,
-        date: document.getElementById("date").value,
+        bookingId: bookingId,
+        date: startDate,
+        endDate: isPackageTrip ? endDate : startDate,
         duty: document.getElementById("duty").value,
         reference: document.getElementById("reference").value,
         pickupLocation: document.getElementById("pickupLocation").value,
@@ -877,16 +918,20 @@
         totalAmount: document.getElementById("totalAmount").value,
         paymentStatus: document.getElementById("paymentStatus").value,
         paidAmount: document.getElementById("paidAmount").value || "0",
-        balanceAmount: document.getElementById("balanceAmount").value || "0"
+        balanceAmount: document.getElementById("balanceAmount").value || "0",
+        isPackage: isPackageTrip
       };
+
       try {
-        if (await tripIdExists(data.bookingId)) {
-          alert("❌ Trip ID already exists. Cannot save.");
-          return;
+        if (isPackageTrip) {
+          const dates = getDatesInRange(startDate, endDate);
+          for (const date of dates) {
+            await push(ref(db, "trips/"), { ...data, date });
+          }
+        } else {
+          await push(ref(db, "trips/"), data);
         }
-        await push(ref(db, "trips/"), data);
-        // Reset the flag if this was a reset
-        if (data.bookingId === "#NST001") {
+        if (bookingId === "#NST001") {
           await set(ref(db, 'tripResetFlag'), false);
         }
         alert("Trip saved!");
@@ -896,8 +941,11 @@
         document.getElementById("vehicleModel").value = "";
         document.getElementById("driverNumber").value = "";
         document.getElementById("vehicleNumber").value = "";
+        document.getElementById("isPackageTrip").checked = false;
+        document.getElementById("endDate").disabled = true;
+        document.getElementById("endDate").value = "";
         handlePaymentStatusChange();
-        await loadDuties(); // Reload duties to include the new one
+        await loadDuties();
       } catch (error) {
         alert("⚠️ Failed to save trip. Please try again.");
       }
