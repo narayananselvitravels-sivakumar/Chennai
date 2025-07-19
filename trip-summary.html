@@ -40,7 +40,7 @@
     /* Modal styles */
     .modal-bg { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); }
     .modal-bg.active { display: flex; align-items: center; justify-content: center; }
-    .modal-content { background: #fff; border-radius: 1rem; max-width: 500px; width: 95vw; padding: 2rem; box-shadow: 0 8px 32px rgba(0,0,0,0.2);}
+    .modal-content { background: #fff; border-radius: 1rem; max-width: 500px; width: 95vw; padding: 2rem; box-shadow: 0 8px 32px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto; }
     .modal-content h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; }
     .modal-content table { width: 100%; }
     .modal-content td { padding: 0.3em 0.5em; }
@@ -55,6 +55,7 @@
       .modal-content { padding: 1rem; }
       th, td { min-width: 80px; }
       .action-btn { font-size: 0.75rem; padding: 0.15rem 0.3rem; }
+      .modal-content { max-width: 90vw; }
     }
   </style>
 </head>
@@ -481,7 +482,7 @@
           <tr><td><b>Total KM</b></td><td>${data.totalKm || ""}</td></tr>
           <tr><td><b>Total Amount</b></td><td>₹${data.totalAmount || ""}</td></tr>
           <tr><td><b>Payment</b></td><td>${data.paymentStatus || ""}</td></tr>
-          <td><b>Paid</b></td><td>₹${data.paidAmount || ""}</td></tr>
+          <tr><td><b>Paid</b></td><td>₹${data.paidAmount || ""}</td></tr>
           <tr><td><b>Balance</b></td><td>₹${data.balanceAmount || ""}</td></tr>
         `;
       } else if (mode === 'edit') {
