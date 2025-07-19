@@ -1,251 +1,138 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Revenue Summary - NST Travels</title>
+  <title>Revenue Dashboard - NST Travels</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background-color: #f3f4f6;
-      font-weight: 600;
-    }
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      padding: 2.5rem;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-    .input-field, .select-field {
-      width: 100%;
-      padding: 0.75rem;
-      border-radius: 0.5rem;
-      border: 1px solid #d1d5db;
-      font-size: 1.1rem;
-      font-weight: 600;
-      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-    .input-field:focus, .select-field:focus {
-      outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-    }
-    .btn {
-      font-size: 1.1rem;
-      font-weight: 700;
-      transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
-    }
-    .btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-    }
-    .btn:disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-    .summary-box {
-      padding: 1.5rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      background-color: white;
-      text-align: center;
-      border: 2px solid;
-    }
-    .section-heading {
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: #1f2937;
-      margin-bottom: 1.5rem;
-      display: flex;
-      align-items: center;
-    }
-    .form-label {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #1f2937;
-    }
-    .nav-link {
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-    .summary-value {
-      font-size: 1.75rem;
-      font-weight: 800;
-    }
-    .pending-item {
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-    .footer-text {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-    @media (max-width: 640px) {
-      .container {
-        padding: 1.5rem;
-      }
-      .input-field, .select-field {
-        font-size: 0.9rem;
-      }
-      .btn {
-        font-size: 0.9rem;
-        padding: 0.75rem 1rem;
-      }
-      .section-heading {
-        font-size: 1.25rem;
-      }
-      .form-label {
-        font-size: 0.95rem;
-      }
-      .nav-link {
-        font-size: 0.9rem;
-      }
-      .summary-box {
-        padding: 1rem;
-      }
-      .summary-value {
-        font-size: 1.25rem;
-      }
-      .pending-item {
-        font-size: 0.9rem;
-      }
-      .footer-text {
-        font-size: 0.85rem;
-      }
-    }
+    body { font-family: 'Inter', sans-serif; background: #f3f4f6; }
+    .container { max-width: 1200px; margin: auto; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);}
+    .filter-bar { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .filter-bar select, .filter-bar input[type="date"] { border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 1rem; }
+    .summary-table th, .summary-table td { text-align: left; min-width: 100px; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chart-legend { display: flex; gap: 1.5rem; margin-top: 1rem; }
+    .legend-dot { display: inline-block; width: 1em; height: 1em; border-radius: 50%; margin-right: 0.5em; }
+    .pivot-table th, .pivot-table td { text-align: right; min-width: 80px; max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pivot-table th:first-child, .pivot-table td:first-child { text-align: left; }
+    .pivot-table th { background: #f3f4f6; }
+    .list-disc { list-style-type: disc; }
   </style>
 </head>
 <body>
-  <!-- Navigation Bar -->
-  <nav class="bg-white shadow-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="flex items-center">
-          <a href="#" class="text-3xl font-bold text-indigo-600">NST Travels</a>
+  <div class="container mt-8">
+    <h2 class="text-3xl font-bold text-gray-900 mb-8"><i class="fas fa-chart-pie mr-2"></i> Revenue Dashboard</h2>
+    <div class="filter-bar">
+      <input type="date" id="startDate" />
+      <input type="date" id="endDate" />
+      <select id="driverFilter"><option value="">All Drivers</option></select>
+      <select id="vehicleFilter"><option value="">All Vehicles</option></select>
+      <select id="dutyFilter"><option value="">All Duties</option></select>
+      <button id="exportBtn" class="btn bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"><i class="fas fa-file-excel mr-2"></i>Export to Excel/CSV</button>
+      <button id="pdfBtn" class="btn bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"><i class="fas fa-file-pdf mr-2"></i>Export to PDF</button>
+    </div>
+    <div class="flex flex-col md:flex-row gap-8 items-center">
+      <div style="width:350px;min-width:250px;">
+        <canvas id="revenueDonut"></canvas>
+        <div class="chart-legend" id="chartLegend"></div>
+      </div>
+      <div class="flex-1">
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div class="bg-green-100 rounded-lg p-4">
+            <div class="text-2xl font-bold" id="paidTotal">₹0</div>
+            <div class="text-green-800 font-semibold">Total Paid</div>
+          </div>
+          <div class="bg-red-100 rounded-lg p-4">
+            <div class="text-2xl font-bold" id="notPaidTotal">₹0</div>
+            <div class="text-red-800 font-semibold">Total Not Paid</div>
+          </div>
+          <div class="bg-yellow-100 rounded-lg p-4">
+            <div class="text-2xl font-bold" id="partialPaidTotal">₹0</div>
+            <div class="text-yellow-800 font-semibold">Total Partially Paid (trips)</div>
+          </div>
         </div>
-        <div class="hidden sm:flex items-center space-x-4">
-          <a href="admin-dashboard.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Dashboard</a>
-          <a href="attendance.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Attendance</a>
-          <a href="driver-dashboard.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Driver Dashboard</a>
-          <a href="drivers-vehicles.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Drivers & Vehicles</a>
-          <a href="payment-summary.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Payment Summary</a>
-          <a href="revenue.html" class="nav-link text-indigo-600 font-bold px-3 py-2 rounded-md">Revenue</a>
-          <a href="trip-summary.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Trip Summary</a>
-          <a href="trip.html" class="nav-link text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md">Trip Entry</a>
-        </div>
       </div>
     </div>
-  </nav>
-
-  <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <h2 class="text-3xl font-bold text-gray-900 mb-8"><i class="fas fa-money-bill-wave mr-2"></i> Revenue Summary</h2>
-
-    <!-- Filters -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
       <div>
-        <label for="startDate" class="form-label block mb-1">Start Date</label>
-        <input type="date" id="startDate" class="input-field w-full" aria-label="Start Date" />
+        <h4 class="font-bold mb-2">Revenue Over Time</h4>
+        <canvas id="revenueLine"></canvas>
       </div>
       <div>
-        <label for="endDate" class="form-label block mb-1">End Date</label>
-        <input type="date" id="endDate" class="input-field w-full" aria-label="End Date" />
-      </div>
-      <div>
-        <label for="driverFilter" class="form-label block mb-1">Driver</label>
-        <select id="driverFilter" class="select-field w-full" aria-label="Filter by Driver">
-          <option value="">All Drivers</option>
-        </select>
-      </div>
-      <div>
-        <label for="vehicleFilter" class="form-label block mb-1">Vehicle</label>
-        <select id="vehicleFilter" class="select-field w-full" aria-label="Filter by Vehicle">
-          <option value="">All Vehicles</option>
-        </select>
-      </div>
-      <div>
-        <label for="customerFilter" class="form-label block mb-1">Customer</label>
-        <select id="customerFilter" class="select-field w-full" aria-label="Filter by Customer">
-          <option value="">All Customers</option>
-        </select>
-      </div>
-      <div>
-        <label for="dutyFilter" class="form-label block mb-1">Duty</label>
-        <select id="dutyFilter" class="select-field w-full" aria-label="Filter by Duty">
-          <option value="">All Duties</option>
-        </select>
-      </div>
-      <div>
-        <label for="paymentStatusFilter" class="form-label block mb-1">Payment Status</label>
-        <select id="paymentStatusFilter" class="select-field w-full" aria-label="Filter by Payment Status">
-          <option value="">All Payment Statuses</option>
-          <option value="Paid">Paid</option>
-          <option value="Not Paid">Not Paid</option>
-          <option value="Partially Paid">Partially Paid</option>
-        </select>
+        <h4 class="font-bold mb-2">Top Drivers by Paid Revenue</h4>
+        <canvas id="topDriversBar"></canvas>
       </div>
     </div>
-
-    <!-- Summary Boxes -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-      <div class="summary-box border-indigo-600">
-        <h4 class="text-lg font-bold text-gray-900 mb-2">Total Revenue</h4>
-        <h3 class="summary-value text-indigo-600" id="totalAmount">₹0</h3>
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div>
+        <h4 class="font-bold mb-2">Top Vehicles by Paid Revenue</h4>
+        <canvas id="topVehiclesBar"></canvas>
       </div>
-      <div class="summary-box border-green-600">
-        <h4 class="text-lg font-bold text-gray-900 mb-2">Paid Amount</h4>
-        <h3 class="summary-value text-green-600" id="paidAmount">₹0</h3>
-      </div>
-      <div class="summary-box border-red-600">
-        <h4 class="text-lg font-bold text-gray-900 mb-2">Pending Amount</h4>
-        <h3 class="summary-value text-red-600" id="pendingAmount">₹0</h3>
+      <div>
+        <h4 class="font-bold mb-2">Duty-wise Paid Revenue</h4>
+        <canvas id="dutyBar"></canvas>
       </div>
     </div>
-
-    <!-- Pending Payments by Customer/Duty -->
-    <div class="mb-6">
-      <h5 class="section-heading"><i class="fas fa-exclamation-circle mr-2"></i> Pending Payments</h5>
-      <div class="mb-4">
-        <label for="pendingFilter" class="form-label block mb-1">View By</label>
-        <select id="pendingFilter" class="select-field w-full max-w-xs" aria-label="Filter Pending Payments">
-          <option value="customer">Customer</option>
-          <option value="duty">Duty</option>
-        </select>
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div>
+        <h4 class="font-bold mb-2">Monthly Paid Revenue</h4>
+        <canvas id="monthlyBar"></canvas>
       </div>
-      <div id="pendingList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      <div>
+        <h4 class="font-bold mb-2">Top Customers by Paid Revenue</h4>
+        <canvas id="topCustomersBar"></canvas>
+      </div>
     </div>
-
-    <!-- Action Buttons -->
-    <div class="flex flex-wrap justify-center gap-4">
-      <button class="btn bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700" onclick="exportToExcel()">
-        <i class="fas fa-file-excel mr-2"></i> Export to Excel
-      </button>
-      <button class="btn bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700" onclick="exportToPDF()">
-        <i class="fas fa-file-pdf mr-2"></i> Export to PDF
-      </button>
-      <button class="btn bg-green-600 text-white px-6 py-3 rounded-md hover:bg-green-700" onclick="shareViaWhatsApp()">
-        <i class="fas fa-whatsapp mr-2"></i> Share via WhatsApp
-      </button>
+    <div class="mt-8">
+      <h4 class="font-bold mb-2">Trip Count by Payment Status</h4>
+      <canvas id="statusPie"></canvas>
+    </div>
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div>
+        <h4 class="font-bold mb-2 text-red-700">Not Paid Trips</h4>
+        <ul id="notPaidList" class="list-disc pl-6 text-red-700"></ul>
+      </div>
+      <div>
+        <h4 class="font-bold mb-2 text-yellow-700">Partially Paid Trips</h4>
+        <ul id="partialPaidList" class="list-disc pl-6 text-yellow-700"></ul>
+      </div>
+    </div>
+    <div class="mt-8">
+      <h4 class="font-bold mb-2">Per Customer, Per Month (Paid Revenue)</h4>
+      <div class="overflow-x-auto"><table class="summary-table pivot-table min-w-full bg-white rounded-lg shadow" id="customerMonthTable"></table></div>
+    </div>
+    <div class="mt-8">
+      <h4 class="font-bold mb-2">Per Duty, Per Month (Paid Revenue)</h4>
+      <div class="overflow-x-auto"><table class="summary-table pivot-table min-w-full bg-white rounded-lg shadow" id="dutyMonthTable"></table></div>
+    </div>
+    <div class="mt-8">
+      <h4 class="font-bold mb-2">Per Driver, Per Month (Paid Revenue)</h4>
+      <div class="overflow-x-auto"><table class="summary-table pivot-table min-w-full bg-white rounded-lg shadow" id="driverMonthTable"></table></div>
+    </div>
+    <div class="overflow-x-auto mt-8">
+      <table class="summary-table min-w-full bg-white rounded-lg shadow">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Trip ID</th>
+            <th>Duty</th>
+            <th>Driver</th>
+            <th>Vehicle</th>
+            <th>Customer</th>
+            <th>Total (₹)</th>
+            <th>Paid (₹)</th>
+            <th>Balance (₹)</th>
+            <th>Payment Status</th>
+          </tr>
+        </thead>
+        <tbody id="revenueTable"></tbody>
+      </table>
     </div>
   </div>
-
-  <!-- Footer -->
-  <footer class="bg-gray-800 text-white py-6 mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <p class="footer-text">© 2025 NST Travels. All rights reserved.</p>
-    </div>
-  </footer>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+    import { getDatabase, ref, child, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
     const firebaseConfig = {
       apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
       authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
@@ -255,293 +142,506 @@
       messagingSenderId: "395599682835",
       appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const dbRef = ref(db);
+
     let allTrips = [];
+    let chart, lineChart, barChart, vehicleBar, dutyBar, monthlyBar, customerBar, statusPie;
+    let drivers = new Set(), vehicles = new Set(), duties = new Set();
 
-    function formatTimeTo12Hour(time) {
-      if (!time) return "";
-      const [hour, minute] = time.split(":").map(Number);
-      const ampm = hour >= 12 ? "PM" : "AM";
-      const hr12 = hour % 12 || 12;
-      return `${hr12}:${minute.toString().padStart(2, '0')} ${ampm}`;
+    function formatDate(dateStr) {
+      if (!dateStr) return "";
+      const [y, m, d] = dateStr.split("-");
+      if (y && m && d) return `${d}-${m}-${y}`;
+      return dateStr;
     }
 
-    function populateDropdowns() {
-      const driverSet = new Set();
-      const vehicleSet = new Set();
-      const customerSet = new Set();
-      const dutySet = new Set();
-      allTrips.forEach(t => {
-        if (t.driverName) driverSet.add(t.driverName);
-        if (t.vehicleModel) vehicleSet.add(t.vehicleModel);
-        if (t.customerName) customerSet.add(t.customerName);
-        if (t.duty) dutySet.add(t.duty);
-      });
-
-      const driverFilter = document.getElementById("driverFilter");
-      driverFilter.innerHTML = '<option value="">All Drivers</option>';
-      driverSet.forEach(d => {
-        driverFilter.innerHTML += `<option value="${d}">${d}</option>`;
-      });
-
-      const vehicleFilter = document.getElementById("vehicleFilter");
-      vehicleFilter.innerHTML = '<option value="">All Vehicles</option>';
-      vehicleSet.forEach(v => {
-        vehicleFilter.innerHTML += `<option value="${v}">${v}</option>`;
-      });
-
-      const customerFilter = document.getElementById("customerFilter");
-      customerFilter.innerHTML = '<option value="">All Customers</option>';
-      customerSet.forEach(c => {
-        customerFilter.innerHTML += `<option value="${c}">${c}</option>`;
-      });
-
-      const dutyFilter = document.getElementById("dutyFilter");
-      dutyFilter.innerHTML = '<option value="">All Duties</option>';
-      dutySet.forEach(d => {
-        dutyFilter.innerHTML += `<option value="${d}">${d}</option>`;
-      });
+    function renderFilters() {
+      const driverSel = document.getElementById("driverFilter");
+      const vehicleSel = document.getElementById("vehicleFilter");
+      const dutySel = document.getElementById("dutyFilter");
+      driverSel.innerHTML = `<option value="">All Drivers</option>` + Array.from(drivers).sort().map(d => `<option value="${d}">${d}</option>`).join("");
+      vehicleSel.innerHTML = `<option value="">All Vehicles</option>` + Array.from(vehicles).sort().map(v => `<option value="${v}">${v}</option>`).join("");
+      dutySel.innerHTML = `<option value="">All Duties</option>` + Array.from(duties).sort().map(d => `<option value="${d}">${d}</option>`).join("");
     }
 
-    function updateRevenue() {
-      let total = 0, paid = 0, pending = 0;
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("endDate").value;
-      const driver = document.getElementById("driverFilter").value;
-      const vehicle = document.getElementById("vehicleFilter").value;
-      const customer = document.getElementById("customerFilter").value;
-      const duty = document.getElementById("dutyFilter").value;
-      const paymentStatus = document.getElementById("paymentStatusFilter").value;
-
-      const filtered = allTrips.filter(t => {
-        const inDateRange = (!start || t.date >= start) && (!end || t.date <= end);
-        const matchDriver = !driver || t.driverName === driver;
-        const matchVehicle = !vehicle || t.vehicleModel === vehicle;
-        const matchCustomer = !customer || t.customerName === customer;
-        const matchDuty = !duty || t.duty === duty;
-        const matchPaymentStatus = !paymentStatus || t.paymentStatus === paymentStatus;
-        return inDateRange && matchDriver && matchVehicle && matchCustomer && matchDuty && matchPaymentStatus;
-      });
-
-      filtered.forEach(t => {
-        const totalAmt = parseFloat(t.totalAmount || 0);
-        const paidAmt = parseFloat(t.paidAmount || 0);
-        const balanceAmt = parseFloat(t.balanceAmount || 0);
-        total += totalAmt;
-        if (t.paymentStatus === "Paid" || t.paymentStatus === "Partially Paid") {
-          paid += paidAmt;
-        }
-        if (t.paymentStatus === "Partially Paid") {
-          pending += balanceAmt;
-        } else if (t.paymentStatus === "Not Paid") {
-          pending += totalAmt;
-        }
-      });
-
-      document.getElementById("totalAmount").textContent = `₹${total.toLocaleString('en-IN')}`;
-      document.getElementById("paidAmount").textContent = `₹${paid.toLocaleString('en-IN')}`;
-      document.getElementById("pendingAmount").textContent = `₹${pending.toLocaleString('en-IN')}`;
-
-      updatePendingList();
-    }
-
-    function updatePendingList() {
-      const pendingFilter = document.getElementById("pendingFilter").value;
-      const pendingList = document.getElementById("pendingList");
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("endDate").value;
-      const driver = document.getElementById("driverFilter").value;
-      const vehicle = document.getElementById("vehicleFilter").value;
-      const customer = document.getElementById("customerFilter").value;
-      const duty = document.getElementById("dutyFilter").value;
-
-      const filtered = allTrips.filter(t => {
-        const inDateRange = (!start || t.date >= start) && (!end || t.date <= end);
-        const matchDriver = !driver || t.driverName === driver;
-        const matchVehicle = !vehicle || t.vehicleModel === vehicle;
-        const matchCustomer = !customer || t.customerName === customer;
-        const matchDuty = !duty || t.duty === duty;
-        const isPending = t.paymentStatus === "Not Paid" || t.paymentStatus === "Partially Paid";
-        return inDateRange && matchDriver && matchVehicle && matchCustomer && matchDuty && isPending;
-      });
-
-      const pendingData = {};
-      filtered.forEach(t => {
-        const key = pendingFilter === "customer" ? t.customerName : t.duty;
-        if (!key) return;
-        const amount = t.paymentStatus === "Not Paid" ? parseFloat(t.totalAmount || 0) : parseFloat(t.balanceAmount || 0);
-        pendingData[key] = (pendingData[key] || 0) + amount;
-      });
-
-      pendingList.innerHTML = "";
-      if (Object.keys(pendingData).length === 0) {
-        pendingList.innerHTML = '<p class="text-gray-600 text-lg font-semibold">No pending payments found.</p>';
-        return;
-      }
-
-      Object.entries(pendingData).forEach(([key, amount]) => {
-        const div = document.createElement("div");
-        div.className = "pending-item bg-gray-100 p-4 rounded-md";
-        div.innerHTML = `
-          <p class="font-bold text-gray-900">${pendingFilter === "customer" ? "Customer" : "Duty"}: ${key}</p>
-          <p class="text-red-600">Pending: ₹${amount.toLocaleString('en-IN')}</p>
+    function renderTable(trips) {
+      const tbody = document.getElementById("revenueTable");
+      tbody.innerHTML = "";
+      trips.forEach(trip => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="border px-2 py-2" title="${formatDate(trip.date)}">${formatDate(trip.date)}</td>
+          <td class="border px-2 py-2" title="${trip.bookingId}">${trip.bookingId}</td>
+          <td class="border px-2 py-2" title="${trip.duty}">${trip.duty}</td>
+          <td class="border px-2 py-2" title="${trip.driverName}">${trip.driverName}</td>
+          <td class="border px-2 py-2" title="${trip.vehicleModel} ${trip.vehicleNumber}">${trip.vehicleModel} ${trip.vehicleNumber}</td>
+          <td class="border px-2 py-2" title="${trip.customerName}">${trip.customerName}</td>
+          <td class="border px-2 py-2" title="${trip.totalAmount}">${trip.totalAmount}</td>
+          <td class="border px-2 py-2" title="${trip.paidAmount}">${trip.paidAmount}</td>
+          <td class="border px-2 py-2" title="${trip.balanceAmount}">${trip.balanceAmount}</td>
+          <td class="border px-2 py-2" title="${trip.paymentStatus}">${trip.paymentStatus}</td>
         `;
-        pendingList.appendChild(div);
+        tbody.appendChild(tr);
       });
     }
 
-    function exportToExcel() {
-      if (!allTrips.length) {
-        alert("No trips to export.");
-        return;
-      }
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(allTrips.map(t => ({
-        "Trip ID": t.bookingId,
-        "Date": t.date,
-        "Duty": t.duty,
-        "Customer": t.customerName,
-        "Driver": t.driverName,
-        "Vehicle": t.vehicleModel,
-        "Total Amount": `₹${t.totalAmount}`,
-        "Payment Status": t.paymentStatus,
-        "Paid Amount": t.paymentStatus === "Paid" || t.paymentStatus === "Partially Paid" ? `₹${t.paidAmount || "0"}` : "",
-        "Balance Amount": t.paymentStatus === "Partially Paid" ? `₹${t.balanceAmount || "0"}` : "",
-        "Start Time": formatTimeTo12Hour(t.startTime),
-        "End Time": formatTimeTo12Hour(t.endTime)
-      })));
-      ws['!cols'] = [
-        { wch: 15 }, { wch: 15 }, { wch: 20 }, { wch: 20 }, { wch: 20 },
-        { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
-        { wch: 15 }, { wch: 15 }
-      ];
-      XLSX.utils.book_append_sheet(wb, ws, "Revenue");
-      XLSX.writeFile(wb, "NST_Revenue.xlsx");
-    }
-
-    function exportToPDF() {
-      if (!allTrips.length) {
-        alert("No trips to export.");
-        return;
-      }
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      const rows = allTrips.map(t => [
-        t.bookingId,
-        t.date,
-        t.duty,
-        t.customerName,
-        t.driverName,
-        t.vehicleModel,
-        `₹${t.totalAmount}`,
-        t.paymentStatus,
-        t.paymentStatus === "Paid" || t.paymentStatus === "Partially Paid" ? `₹${t.paidAmount || "0"}` : "",
-        t.paymentStatus === "Partially Paid" ? `₹${t.balanceAmount || "0"}` : "",
-        formatTimeTo12Hour(t.startTime),
-        formatTimeTo12Hour(t.endTime)
-      ]);
-      doc.text("NST Revenue Summary", 14, 15);
-      doc.autoTable({
-        head: [["Trip ID", "Date", "Duty", "Customer", "Driver", "Vehicle", "Total Amount", "Payment Status", "Paid Amount", "Balance Amount", "Start Time", "End Time"]],
-        body: rows,
-        startY: 20,
-        styles: { fontSize: 8 },
-        columnStyles: {
-          0: { cellWidth: 20 },
-          1: { cellWidth: 25 },
-          2: { cellWidth: 20 },
-          3: { cellWidth: 25 },
-          4: { cellWidth: 25 },
-          5: { cellWidth: 25 },
-          6: { cellWidth: 20 },
-          7: { cellWidth: 20 },
-          8: { cellWidth: 20 },
-          9: { cellWidth: 20 },
-          10: { cellWidth: 20 },
-          11: { cellWidth: 20 }
+    function renderChart(trips) {
+      let paidAmt = 0, notPaidAmt = 0, partialPaidAmt = 0, partialPaidTrips = 0;
+      trips.forEach(trip => {
+        const total = parseFloat(trip.totalAmount) || 0;
+        const paid = parseFloat(trip.paidAmount) || 0;
+        const balance = parseFloat(trip.balanceAmount) || 0;
+        if (trip.paymentStatus === "Paid") {
+          paidAmt += total;
+        } else if (trip.paymentStatus === "Not Paid") {
+          notPaidAmt += total;
+        } else if (trip.paymentStatus === "Partially Paid") {
+          paidAmt += paid;
+          notPaidAmt += balance;
+          partialPaidAmt += total;
+          partialPaidTrips++;
         }
       });
-      doc.save("NST_Revenue.pdf");
+      const ctx = document.getElementById('revenueDonut').getContext('2d');
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Paid', 'Not Paid'],
+          datasets: [{
+            data: [paidAmt, notPaidAmt],
+            backgroundColor: ['#22c55e', '#ef4444'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          plugins: {
+            legend: { display: false }
+          },
+          cutout: '70%',
+        }
+      });
+      document.getElementById("chartLegend").innerHTML = `
+        <span><span class="legend-dot" style="background:#22c55e"></span>Paid</span>
+        <span><span class="legend-dot" style="background:#ef4444"></span>Not Paid</span>
+        <span><span class="legend-dot" style="background:#facc15"></span>Partially Paid Trips: ${partialPaidTrips}</span>
+      `;
+      document.getElementById("paidTotal").textContent = "₹" + paidAmt.toFixed(2);
+      document.getElementById("notPaidTotal").textContent = "₹" + notPaidAmt.toFixed(2);
+      document.getElementById("partialPaidTotal").textContent = "₹" + partialPaidAmt.toFixed(2) + ` (${partialPaidTrips} trips)`;
     }
 
-    function shareViaWhatsApp() {
-      const start = document.getElementById("startDate").value;
-      const end = document.getElementById("endDate").value;
+    function renderRevenueOverTime(trips) {
+      const dateMap = {};
+      trips.forEach(trip => {
+        if (!trip.date) return;
+        const d = formatDate(trip.date);
+        if (!dateMap[d]) dateMap[d] = 0;
+        if (trip.paymentStatus === "Paid" || trip.paymentStatus === "Partially Paid") {
+          dateMap[d] += parseFloat(trip.paidAmount) || 0;
+        }
+      });
+      const labels = Object.keys(dateMap).sort((a, b) => {
+        const [da,ma,ya] = a.split("-"); const [db,mb,yb] = b.split("-");
+        return new Date(`${ya}-${ma}-${da}`) - new Date(`${yb}-${mb}-${db}`);
+      });
+      const data = labels.map(d => dateMap[d]);
+      const ctx = document.getElementById('revenueLine').getContext('2d');
+      if (lineChart) lineChart.destroy();
+      lineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Paid Revenue',
+            data,
+            borderColor: '#22c55e',
+            backgroundColor: 'rgba(34,197,94,0.1)',
+            tension: 0.2
+          }]
+        },
+        options: { plugins: { legend: { display: false } } }
+      });
+    }
+
+    function renderTopDrivers(trips) {
+      const driverMap = {};
+      trips.forEach(trip => {
+        if (!trip.driverName) return;
+        if (!driverMap[trip.driverName]) driverMap[trip.driverName] = 0;
+        if (trip.paymentStatus === "Paid" || trip.paymentStatus === "Partially Paid") {
+          driverMap[trip.driverName] += parseFloat(trip.paidAmount) || 0;
+        }
+      });
+      const sorted = Object.entries(driverMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      const labels = sorted.map(([d]) => d);
+      const data = sorted.map(([, amt]) => amt);
+      const ctx = document.getElementById('topDriversBar').getContext('2d');
+      if (barChart) barChart.destroy();
+      barChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Paid Revenue',
+            data,
+            backgroundColor: '#3b82f6'
+          }]
+        },
+        options: { plugins: { legend: { display: false } } }
+      });
+    }
+
+    function renderTopVehicles(trips) {
+      const vehicleMap = {};
+      trips.forEach(trip => {
+        const v = (trip.vehicleModel || "") + " " + (trip.vehicleNumber || "");
+        if (!v.trim()) return;
+        if (!vehicleMap[v]) vehicleMap[v] = 0;
+        if (trip.paymentStatus === "Paid" || trip.paymentStatus === "Partially Paid") {
+          vehicleMap[v] += parseFloat(trip.paidAmount) || 0;
+        }
+      });
+      const sorted = Object.entries(vehicleMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      const labels = sorted.map(([v]) => v);
+      const data = sorted.map(([, amt]) => amt);
+      const ctx = document.getElementById('topVehiclesBar').getContext('2d');
+      if (vehicleBar) vehicleBar.destroy();
+      vehicleBar = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Paid Revenue',
+            data,
+            backgroundColor: '#f59e42'
+          }]
+        },
+        options: { plugins: { legend: { display: false } } }
+      });
+    }
+
+    function renderDutyBar(trips) {
+      const dutyMap = {};
+      trips.forEach(trip => {
+        if (!trip.duty) return;
+        if (!dutyMap[trip.duty]) dutyMap[trip.duty] = 0;
+        if (trip.paymentStatus === "Paid" || trip.paymentStatus === "Partially Paid") {
+          dutyMap[trip.duty] += parseFloat(trip.paidAmount) || 0;
+        }
+      });
+      const sorted = Object.entries(dutyMap).sort((a, b) => b[1] - a[1]);
+      const labels = sorted.map(([d]) => d);
+      const data = sorted.map(([, amt]) => amt);
+      const ctx = document.getElementById('dutyBar').getContext('2d');
+      if (dutyBar) dutyBar.destroy();
+      dutyBar = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Paid Revenue',
+            data,
+            backgroundColor: '#a78bfa'
+          }]
+        },
+        options: { plugins: { legend: { display: false } } }
+      });
+    }
+
+    function renderMonthlyBar(trips) {
+      const monthMap = {};
+      trips.forEach(trip => {
+        if (!trip.date) return;
+        const [y, m] = trip.date.split("-");
+        const key = `${m}-${y}`;
+        if (!monthMap[key]) monthMap[key] = 0;
+        if (trip.paymentStatus === "Paid" || trip.paymentStatus === "Partially Paid") {
+          monthMap[key] += parseFloat(trip.paidAmount) || 0;
+        }
+      });
+      const labels = Object.keys(monthMap).sort((a, b) => {
+        const [ma,ya] = a.split("-"); const [mb,yb] = b.split("-");
+        return new Date(`${ya}-${ma}-01`) - new Date(`${yb}-${mb}-01`);
+      });
+      const data = labels.map(k => monthMap[k]);
+      const ctx = document.getElementById('monthlyBar').getContext('2d');
+      if (monthlyBar) monthlyBar.destroy();
+      monthlyBar = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Paid Revenue',
+            data,
+            backgroundColor: '#38bdf8'
+          }]
+        },
+        options: { plugins: { legend: { display: false } } }
+      });
+    }
+
+    function renderTopCustomers(trips) {
+      const custMap = {};
+      trips.forEach(trip => {
+        if (!trip.customerName) return;
+        if (!custMap[trip.customerName]) custMap[trip.customerName] = 0;
+        if (trip.paymentStatus === "Paid" || trip.paymentStatus === "Partially Paid") {
+          custMap[trip.customerName] += parseFloat(trip.paidAmount) || 0;
+        }
+      });
+      const sorted = Object.entries(custMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      const labels = sorted.map(([c]) => c);
+      const data = sorted.map(([, amt]) => amt);
+      const ctx = document.getElementById('topCustomersBar').getContext('2d');
+      if (customerBar) customerBar.destroy();
+      customerBar = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Paid Revenue',
+            data,
+            backgroundColor: '#f472b6'
+          }]
+        },
+        options: { plugins: { legend: { display: false } } }
+      });
+    }
+
+    function renderStatusPie(trips) {
+      let paid = 0, notPaid = 0, partial = 0;
+      trips.forEach(trip => {
+        if (trip.paymentStatus === "Paid") paid++;
+        else if (trip.paymentStatus === "Not Paid") notPaid++;
+        else if (trip.paymentStatus === "Partially Paid") partial++;
+      });
+      const ctx = document.getElementById('statusPie').getContext('2d');
+      if (statusPie) statusPie.destroy();
+      statusPie = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Paid', 'Not Paid', 'Partially Paid'],
+          datasets: [{
+            data: [paid, notPaid, partial],
+            backgroundColor: ['#22c55e', '#ef4444', '#facc15']
+          }]
+        }
+      });
+    }
+
+    function renderPivotTable(trips, rowKey, tableId) {
+      const pivot = {};
+      const monthsSet = new Set();
+      trips.forEach(trip => {
+        if (!trip[rowKey] || !trip.date) return;
+        const [y, m] = trip.date.split("-");
+        const month = `${m}-${y}`;
+        monthsSet.add(month);
+        if (!pivot[trip[rowKey]]) pivot[trip[rowKey]] = {};
+        if (!pivot[trip[rowKey]][month]) pivot[trip[rowKey]][month] = 0;
+        if (trip.paymentStatus === "Paid" || trip.paymentStatus === "Partially Paid") {
+          pivot[trip[rowKey]][month] += parseFloat(trip.paidAmount) || 0;
+        }
+      });
+      const months = Array.from(monthsSet).sort((a, b) => {
+        const [ma,ya] = a.split("-"); const [mb,yb] = b.split("-");
+        return new Date(`${ya}-${ma}-01`) - new Date(`${yb}-${mb}-01`);
+      });
+      const rows = Object.keys(pivot).sort();
+      const table = document.getElementById(tableId);
+      let html = `<thead><tr><th>${rowKey.replace(/Name/,"")}</th>`;
+      months.forEach(m => html += `<th>${m}</th>`);
+      html += `<th>Total</th></tr></thead><tbody>`;
+      rows.forEach(r => {
+        let rowTotal = 0;
+        html += `<tr><td>${r}</td>`;
+        months.forEach(m => {
+          const val = pivot[r][m] || 0;
+          rowTotal += val;
+          html += `<td>${val ? "₹" + val.toFixed(2) : ""}</td>`;
+        });
+        html += `<td>₹${rowTotal.toFixed(2)}</td></tr>`;
+      });
+      html += "</tbody>";
+      table.innerHTML = html;
+    }
+
+    function renderNotPaidLists(trips) {
+      const notPaidList = document.getElementById("notPaidList");
+      const partialPaidList = document.getElementById("partialPaidList");
+      notPaidList.innerHTML = "";
+      partialPaidList.innerHTML = "";
+
+      trips.filter(trip => trip.paymentStatus === "Not Paid").forEach(trip => {
+        const li = document.createElement("li");
+        li.textContent = `${trip.customerName || ""} (${trip.bookingId || ""}) - ₹${trip.totalAmount || ""}`;
+        notPaidList.appendChild(li);
+      });
+
+      trips.filter(trip => trip.paymentStatus === "Partially Paid").forEach(trip => {
+        const li = document.createElement("li");
+        li.textContent = `${trip.customerName || ""} (${trip.bookingId || ""}) - Paid: ₹${trip.paidAmount || ""}, Balance: ₹${trip.balanceAmount || ""}`;
+        partialPaidList.appendChild(li);
+      });
+    }
+
+    function filterTrips() {
       const driver = document.getElementById("driverFilter").value;
       const vehicle = document.getElementById("vehicleFilter").value;
-      const customer = document.getElementById("customerFilter").value;
       const duty = document.getElementById("dutyFilter").value;
-      const paymentStatus = document.getElementById("paymentStatusFilter").value;
-      const total = document.getElementById("totalAmount").textContent;
-      const paid = document.getElementById("paidAmount").textContent;
-      const pending = document.getElementById("pendingAmount").textContent;
-
-      const pendingFilter = document.getElementById("pendingFilter").value;
-      const filtered = allTrips.filter(t => {
-        const inDateRange = (!start || t.date >= start) && (!end || t.date <= end);
-        const matchDriver = !driver || t.driverName === driver;
-        const matchVehicle = !vehicle || t.vehicleModel === vehicle;
-        const matchCustomer = !customer || t.customerName === customer;
-        const matchDuty = !duty || t.duty === duty;
-        const isPending = t.paymentStatus === "Not Paid" || t.paymentStatus === "Partially Paid";
-        return inDateRange && matchDriver && matchVehicle && matchCustomer && matchDuty && isPending;
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+      let filtered = allTrips.filter(trip => {
+        if (driver && trip.driverName !== driver) return false;
+        if (vehicle && (trip.vehicleModel + " " + trip.vehicleNumber) !== vehicle) return false;
+        if (duty && trip.duty !== duty) return false;
+        if (startDate && trip.date < startDate) return false;
+        if (endDate && trip.date > endDate) return false;
+        return true;
       });
-
-      const pendingData = {};
-      filtered.forEach(t => {
-        const key = pendingFilter === "customer" ? t.customerName : t.duty;
-        if (!key) return;
-        const amount = t.paymentStatus === "Not Paid" ? parseFloat(t.totalAmount || 0) : parseFloat(t.balanceAmount || 0);
-        pendingData[key] = (pendingData[key] || 0) + amount;
-      });
-
-      let pendingMessage = `\n\n📋 *Pending Payments by ${pendingFilter === "customer" ? "Customer" : "Duty"}*`;
-      if (Object.keys(pendingData).length === 0) {
-        pendingMessage += "\n• No pending payments found.";
-      } else {
-        Object.entries(pendingData).forEach(([key, amount]) => {
-          pendingMessage += `\n• ${key}: ₹${amount.toLocaleString('en-IN')}`;
-        });
-      }
-
-      const message = `
-📊 *NST Revenue Summary*
-
-📅 *Date Range*: ${start || "All"} to ${end || "All"}
-👨‍✈ *Driver*: ${driver || "All"}
-🚘 *Vehicle*: ${vehicle || "All"}
-👤 *Customer*: ${customer || "All"}
-📋 *Duty*: ${duty || "All"}
-💳 *Payment Status*: ${paymentStatus || "All"}
-
-💰 *Financial Summary*
-• Total Revenue: ${total}
-• Paid Amount: ${paid}
-• Pending Amount: ${pending}${pendingMessage}
-      `.trim();
-
-      const url = "https://wa.me/?text=" + encodeURIComponent(message);
-      window.open(url, "_blank");
+      filtered.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      renderChart(filtered);
+      renderTable(filtered);
+      renderRevenueOverTime(filtered);
+      renderTopDrivers(filtered);
+      renderTopVehicles(filtered);
+      renderDutyBar(filtered);
+      renderMonthlyBar(filtered);
+      renderTopCustomers(filtered);
+      renderStatusPie(filtered);
+      renderPivotTable(filtered, "customerName", "customerMonthTable");
+      renderPivotTable(filtered, "duty", "dutyMonthTable");
+      renderPivotTable(filtered, "driverName", "driverMonthTable");
+      renderNotPaidLists(filtered);
     }
 
-    onValue(ref(db, "trips"), (snapshot) => {
+    async function loadRevenueDashboard() {
       allTrips = [];
-      snapshot.forEach(child => {
-        allTrips.push(child.val());
+      drivers = new Set(); vehicles = new Set(); duties = new Set();
+      try {
+        const tripsSnap = await get(child(dbRef, 'trips'));
+        if (tripsSnap.exists()) {
+          Object.values(tripsSnap.val()).forEach(trip => {
+            allTrips.push(trip);
+            if (trip.driverName) drivers.add(trip.driverName);
+            if (trip.vehicleModel || trip.vehicleNumber) vehicles.add((trip.vehicleModel || "") + " " + (trip.vehicleNumber || ""));
+            if (trip.duty) duties.add(trip.duty);
+          });
+        }
+        renderFilters();
+        filterTrips();
+      } catch (error) {
+        alert("Error loading data.");
+      }
+    }
+
+    document.getElementById("driverFilter").addEventListener("change", filterTrips);
+    document.getElementById("vehicleFilter").addEventListener("change", filterTrips);
+    document.getElementById("dutyFilter").addEventListener("change", filterTrips);
+    document.getElementById("startDate").addEventListener("change", filterTrips);
+    document.getElementById("endDate").addEventListener("change", filterTrips);
+
+    // Export to CSV/Excel
+    document.getElementById("exportBtn").addEventListener("click", function() {
+      const driver = document.getElementById("driverFilter").value;
+      const vehicle = document.getElementById("vehicleFilter").value;
+      const duty = document.getElementById("dutyFilter").value;
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+      let filtered = allTrips.filter(trip => {
+        if (driver && trip.driverName !== driver) return false;
+        if (vehicle && (trip.vehicleModel + " " + trip.vehicleNumber) !== vehicle) return false;
+        if (duty && trip.duty !== duty) return false;
+        if (startDate && trip.date < startDate) return false;
+        if (endDate && trip.date > endDate) return false;
+        return true;
       });
-      populateDropdowns();
-      updateRevenue();
+      if (!filtered.length) {
+        alert("No data to export.");
+        return;
+      }
+      const headers = [
+        "Date","Trip ID","Duty","Driver","Vehicle","Customer","Total (₹)","Paid (₹)","Balance (₹)","Payment Status"
+      ];
+      const csvRows = [headers.join(",")];
+      filtered.forEach(trip => {
+        csvRows.push([
+          formatDate(trip.date),
+          trip.bookingId,
+          trip.duty,
+          trip.driverName,
+          (trip.vehicleModel || "") + " " + (trip.vehicleNumber || ""),
+          trip.customerName,
+          trip.totalAmount,
+          trip.paidAmount,
+          trip.balanceAmount,
+          trip.paymentStatus
+        ].map(v => `"${(v||"").replace(/"/g, '""')}"`).join(","));
+      });
+      const csvContent = csvRows.join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "NST-Revenue-Dashboard.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     });
 
-    ["startDate", "endDate", "driverFilter", "vehicleFilter", "customerFilter", "dutyFilter", "paymentStatusFilter", "pendingFilter"].forEach(id => {
-      document.getElementById(id).addEventListener("change", updateRevenue);
+    // Export to PDF
+    document.getElementById("pdfBtn").addEventListener("click", function() {
+      const driver = document.getElementById("driverFilter").value;
+      const vehicle = document.getElementById("vehicleFilter").value;
+      const duty = document.getElementById("dutyFilter").value;
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+      let filtered = allTrips.filter(trip => {
+        if (driver && trip.driverName !== driver) return false;
+        if (vehicle && (trip.vehicleModel + " " + trip.vehicleNumber) !== vehicle) return false;
+        if (duty && trip.duty !== duty) return false;
+        if (startDate && trip.date < startDate) return false;
+        if (endDate && trip.date > endDate) return false;
+        return true;
+      });
+      if (!filtered.length) {
+        alert("No data to export.");
+        return;
+      }
+      const headers = [
+        "Date","Trip ID","Duty","Driver","Vehicle","Customer","Total (₹)","Paid (₹)","Balance (₹)","Payment Status"
+      ];
+      const data = filtered.map(trip => [
+        formatDate(trip.date),
+        trip.bookingId,
+        trip.duty,
+        trip.driverName,
+        (trip.vehicleModel || "") + " " + (trip.vehicleNumber || ""),
+        trip.customerName,
+        trip.totalAmount,
+        trip.paidAmount,
+        trip.balanceAmount,
+        trip.paymentStatus
+      ]);
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "A4" });
+      doc.text("NST Travels - Revenue Dashboard", 40, 30);
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: 40,
+        styles: { fontSize: 9, cellWidth: 'auto', overflow: 'linebreak' },
+        headStyles: { fillColor: [59, 130, 246] },
+        margin: { left: 10, right: 10 }
+      });
+      doc.save("NST-Revenue-Dashboard.pdf");
     });
+
+    window.addEventListener("DOMContentLoaded", loadRevenueDashboard);
   </script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 </body>
 </html>
