@@ -157,6 +157,16 @@
       return dateStr;
     }
 
+    function padDate(date) {
+      return date ? date : "";
+    }
+
+    function formatDateRange(startDate, endDate) {
+      if (!startDate) return "";
+      if (startDate === endDate || !endDate) return formatDate(startDate);
+      return `${formatDate(startDate)} to ${formatDate(endDate)}`;
+    }
+
     function renderFilters() {
       const driverSel = document.getElementById("driverFilter");
       const vehicleSel = document.getElementById("vehicleFilter");
@@ -172,7 +182,7 @@
       trips.forEach(trip => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td class="border px-2 py-2" title="${formatDate(trip.date)}">${formatDate(trip.date)}</td>
+          <td class="border px-2 py-2" title="${trip.dateDisplay || formatDate(trip.date)}">${trip.dateDisplay || formatDate(trip.date)}</td>
           <td class="border px-2 py-2" title="${trip.bookingId}">${trip.bookingId}</td>
           <td class="border px-2 py-2" title="${trip.duty}">${trip.duty}</td>
           <td class="border px-2 py-2" title="${trip.driverName}">${trip.driverName}</td>
@@ -237,7 +247,7 @@
       const dateMap = {};
       trips.forEach(trip => {
         if (!trip.date) return;
-        const d = formatDate(trip.date);
+        const d = trip.dateDisplay || formatDate(trip.date);
         if (!dateMap[d]) dateMap[d] = 0;
         if (trip.paymentStatus === "Paid" || trip.paymentStatus === "Partially Paid") {
           dateMap[d] += parseFloat(trip.paidAmount) || 0;
@@ -524,13 +534,61 @@
       try {
         const tripsSnap = await get(child(dbRef, 'trips'));
         if (tripsSnap.exists()) {
-          Object.values(tripsSnap.val()).forEach(trip => {
-            allTrips.push(trip);
-            if (trip.driverName) drivers.add(trip.driverName);
-            if (trip.vehicleModel || trip.vehicleNumber) vehicles.add((trip.vehicleModel || "") + " " + (trip.vehicleNumber || ""));
-            if (trip.duty) duties.add(trip.duty);
+          const trips = tripsSnap.val();
+          const packageTrips = {};
+          Object.entries(trips).forEach(([key, trip]) => {
+            if (trip.isPackage) {
+              if (!packageTrips[trip.bookingId]) {
+                packageTrips[trip.bookingId] = {
+                  key,
+                  date: trip.date,
+                  dateDisplay: "",
+                  bookingId: trip.bookingId,
+                  duty: trip.duty,
+                  driverName: trip.driverName,
+                  vehicleModel: trip.vehicleModel,
+                  vehicleNumber: trip.vehicleNumber,
+                  customerName: trip.customerName,
+                  totalAmount: parseFloat(trip.totalAmount) || 0,
+                  paidAmount: parseFloat(trip.paidAmount) || 0,
+                  balanceAmount: parseFloat(trip.balanceAmount) || 0,
+                  paymentStatus: trip.paymentStatus || "",
+                  dates: [trip.date]
+                };
+              } else {
+                packageTrips[trip.bookingId].dates.push(trip.date);
+              }
+            } else {
+              allTrips.push({
+                key,
+                date: trip.date,
+                dateDisplay: formatDate(trip.date),
+                bookingId: trip.bookingId,
+                duty: trip.duty,
+                driverName: trip.driverName,
+                vehicleModel: trip.vehicleModel,
+                vehicleNumber: trip.vehicleNumber,
+                customerName: trip.customerName,
+                totalAmount: trip.totalAmount,
+                paidAmount: trip.paidAmount,
+                balanceAmount: trip.balanceAmount,
+                paymentStatus: trip.paymentStatus
+              });
+            }
+          });
+          Object.entries(packageTrips).forEach(([bookingId, pkg]) => {
+            const startDate = pkg.dates.sort()[0];
+            const endDate = pkg.dates[pkg.dates.length - 1];
+            pkg.dateDisplay = formatDateRange(startDate, endDate);
+            pkg.date = startDate; // For sorting
+            allTrips.push(pkg);
           });
         }
+        allTrips.forEach(trip => {
+          if (trip.driverName) drivers.add(trip.driverName);
+          if (trip.vehicleModel || trip.vehicleNumber) vehicles.add((trip.vehicleModel || "") + " " + (trip.vehicleNumber || ""));
+          if (trip.duty) duties.add(trip.duty);
+        });
         renderFilters();
         filterTrips();
       } catch (error) {
@@ -569,7 +627,7 @@
       const csvRows = [headers.join(",")];
       filtered.forEach(trip => {
         csvRows.push([
-          formatDate(trip.date),
+          trip.dateDisplay || formatDate(trip.date),
           trip.bookingId,
           trip.duty,
           trip.driverName,
@@ -616,7 +674,7 @@
         "Date","Trip ID","Duty","Driver","Vehicle","Customer","Total (₹)","Paid (₹)","Balance (₹)","Payment Status"
       ];
       const data = filtered.map(trip => [
-        formatDate(trip.date),
+        trip.dateDisplay || formatDate(trip.date),
         trip.bookingId,
         trip.duty,
         trip.driverName,
