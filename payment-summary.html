@@ -23,12 +23,18 @@
     .overflow-x-auto { overflow-x: auto; }
     .modal-bg { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); }
     .modal-bg.active { display: flex; align-items: center; justify-content: center; }
-    .modal-content { background: #fff; border-radius: 1rem; max-width: 500px; width: 95vw; padding: 2rem; box-shadow: 0 8px 32px rgba(0,0,0,0.2);}
+    .modal-content { background: #fff; border-radius: 1rem; max-width: 500px; width: 95vw; padding: 2rem; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
     .modal-content h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; }
-    .modal-content table { width: 100%; }
-    .modal-content td { padding: 0.3em 0.5em; }
+    .modal-content .detail-row { display: flex; margin-bottom: 0.5rem; }
+    .modal-content .detail-label { width: 30%; min-width: 120px; font-weight: 600; padding: 0.5rem; }
+    .modal-content .detail-value { width: 70%; min-width: 200px; padding: 0.5rem; word-wrap: break-word; word-break: break-all; overflow-wrap: break-word; white-space: normal !important; }
     .modal-close { float: right; font-size: 1.5rem; color: #ef4444; cursor: pointer; }
     tfoot td { font-weight: bold; background: #f3f4f6; }
+    @media (max-width: 600px) {
+      .modal-content { padding: 1rem; }
+      .modal-content .detail-label { min-width: 100px; }
+      .modal-content .detail-value { width: 60%; min-width: 150px; }
+    }
   </style>
 </head>
 <body>
@@ -80,9 +86,9 @@
   <!-- Modal for Trip View -->
   <div id="tripModalBg" class="modal-bg">
     <div class="modal-content">
-      <span class="modal-close" id="modalCloseBtn">&times;</span>
+      <span class="modal-close" id="modalCloseBtn">×</span>
       <h3>Trip Details</h3>
-      <table id="tripModalTable"></table>
+      <div id="tripModalDetails"></div>
     </div>
   </div>
 
@@ -116,6 +122,12 @@
       return date ? date : "";
     }
 
+    function formatDateRange(startDate, endDate) {
+      if (!startDate) return "";
+      if (startDate === endDate || !endDate) return formatDate(startDate);
+      return `${formatDate(startDate)} to ${formatDate(endDate)}`;
+    }
+
     function renderTable(rows) {
       lastFilteredRows = rows;
       const tbody = document.getElementById("paymentSummaryTable");
@@ -131,7 +143,7 @@
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td class="border px-2 py-2" title="${row.tripId}">${row.tripId}</td>
-            <td class="border px-2 py-2" title="${formatDate(row.date)}">${formatDate(row.date)}</td>
+            <td class="border px-2 py-2" title="${row.dateDisplay}">${row.dateDisplay}</td>
             <td class="border px-2 py-2" title="${row.customer}">${row.customer}</td>
             <td class="border px-2 py-2" title="${row.driver}">${row.driver}</td>
             <td class="border px-2 py-2" title="${row.vehicle}">${row.vehicle}</td>
@@ -192,19 +204,59 @@
       try {
         const tripsSnap = await get(child(dbRef, 'trips'));
         if (tripsSnap.exists()) {
-          Object.entries(tripsSnap.val()).forEach(([key, trip]) => {
+          const trips = tripsSnap.val();
+          const packageTrips = {};
+          Object.entries(trips).forEach(([key, trip]) => {
+            if (trip.isPackage) {
+              if (!packageTrips[trip.bookingId]) {
+                packageTrips[trip.bookingId] = {
+                  key,
+                  dates: [trip.date],
+                  totalAmount: parseFloat(trip.totalAmount) || 0,
+                  paidAmount: parseFloat(trip.paidAmount) || 0,
+                  balanceAmount: parseFloat(trip.balanceAmount) || 0,
+                  paymentStatus: trip.paymentStatus || "",
+                  customerName: trip.customerName || "",
+                  driverName: trip.driverName || "",
+                  vehicleModel: trip.vehicleModel || "",
+                  vehicleNumber: trip.vehicleNumber || ""
+                };
+              } else {
+                packageTrips[trip.bookingId].dates.push(trip.date);
+              }
+            } else {
+              allRows.push({
+                key,
+                tripId: trip.bookingId || "",
+                dateDisplay: formatDate(trip.date),
+                date: trip.date || "",
+                customer: trip.customerName || "",
+                driver: trip.driverName || "",
+                vehicle: (trip.vehicleModel || "") + (trip.vehicleNumber ? " (" + trip.vehicleNumber + ")" : ""),
+                totalAmount: trip.totalAmount || "",
+                paidAmount: trip.paidAmount || "",
+                balanceAmount: trip.balanceAmount || "",
+                payment: trip.paymentStatus || "",
+                data: trip
+              });
+            }
+          });
+          Object.entries(packageTrips).forEach(([bookingId, pkg]) => {
+            const startDate = pkg.dates.sort()[0];
+            const endDate = pkg.dates[pkg.dates.length - 1]; // Use latest date as endDate
             allRows.push({
-              key,
-              tripId: trip.bookingId || "",
-              date: trip.date || "",
-              customer: trip.customerName || "",
-              driver: trip.driverName || "",
-              vehicle: (trip.vehicleModel || "") + (trip.vehicleNumber ? " (" + trip.vehicleNumber + ")" : ""),
-              totalAmount: trip.totalAmount || "",
-              paidAmount: trip.paidAmount || "",
-              balanceAmount: trip.balanceAmount || "",
-              payment: trip.paymentStatus || "",
-              data: trip
+              key: pkg.key,
+              tripId: bookingId,
+              dateDisplay: formatDateRange(startDate, endDate),
+              date: startDate, // For sorting
+              customer: pkg.customerName,
+              driver: pkg.driverName,
+              vehicle: (pkg.vehicleModel || "") + (pkg.vehicleNumber ? " (" + pkg.vehicleNumber + ")" : ""),
+              totalAmount: pkg.totalAmount.toFixed(2), // Use first trip's total as package total
+              paidAmount: pkg.paidAmount.toFixed(2),
+              balanceAmount: pkg.balanceAmount.toFixed(2),
+              payment: pkg.paymentStatus,
+              data: trips[pkg.key] // Use first trip's data for modal
             });
           });
         }
@@ -232,7 +284,7 @@
       lastFilteredRows.forEach(row => {
         csvRows.push([
           row.tripId,
-          formatDate(row.date),
+          row.dateDisplay,
           row.customer,
           row.driver,
           row.vehicle,
@@ -265,7 +317,7 @@
       ];
       const data = lastFilteredRows.map(row => [
         row.tripId,
-        formatDate(row.date),
+        row.dateDisplay,
         row.customer,
         row.driver,
         row.vehicle,
@@ -291,25 +343,25 @@
     // Modal logic
     function showTripModal(trip) {
       const modalBg = document.getElementById("tripModalBg");
-      const modalTable = document.getElementById("tripModalTable");
-      modalTable.innerHTML = `
-        <tr><td><b>Trip ID</b></td><td>${trip.bookingId || ""}</td></tr>
-        <tr><td><b>Date</b></td><td>${formatDate(trip.date) || ""}</td></tr>
-        <tr><td><b>Duty</b></td><td>${trip.duty || ""}</td></tr>
-        <tr><td><b>Reference</b></td><td>${trip.reference || ""}</td></tr>
-        <tr><td><b>Pickup</b></td><td>${trip.pickupLocation || ""}</td></tr>
-        <tr><td><b>Drop</b></td><td>${trip.dropLocation || ""}</td></tr>
-        <tr><td><b>Customer</b></td><td>${trip.customerName || ""} (${trip.customerNumber || ""})</td></tr>
-        <tr><td><b>Driver</b></td><td>${trip.driverName || ""} (${trip.driverNumber || ""})</td></tr>
-        <tr><td><b>Vehicle</b></td><td>${trip.vehicleModel || ""} (${trip.vehicleNumber || ""})</td></tr>
-        <tr><td><b>Start</b></td><td>${trip.startTime || ""}</td></tr>
-        <tr><td><b>End</b></td><td>${trip.endTime || ""}</td></tr>
-        <tr><td><b>Duration</b></td><td>${trip.duration || ""}</td></tr>
-        <tr><td><b>Total KM</b></td><td>${trip.totalKm || ""}</td></tr>
-        <tr><td><b>Total Amount</b></td><td>₹${trip.totalAmount || ""}</td></tr>
-        <tr><td><b>Payment</b></td><td>${trip.paymentStatus || ""}</td></tr>
-        <tr><td><b>Paid</b></td><td>₹${trip.paidAmount || ""}</td></tr>
-        <tr><td><b>Balance</b></td><td>₹${trip.balanceAmount || ""}</td></tr>
+      const modalDetails = document.getElementById("tripModalDetails");
+      modalDetails.innerHTML = `
+        <div class="detail-row"><div class="detail-label"><b>Trip ID</b></div><div class="detail-value">${trip.bookingId || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Date</b></div><div class="detail-value">${formatDate(trip.date) || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Duty</b></div><div class="detail-value">${trip.duty || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Reference</b></div><div class="detail-value">${trip.reference || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Pickup</b></div><div class="detail-value">${trip.pickupLocation || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Drop</b></div><div class="detail-value">${trip.dropLocation || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Customer</b></div><div class="detail-value">${trip.customerName || ""} (${trip.customerNumber || ""})</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Driver</b></div><div class="detail-value">${trip.driverName || ""} (${trip.driverNumber || ""})</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Vehicle</b></div><div class="detail-value">${trip.vehicleModel || ""} (${trip.vehicleNumber || ""})</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Start</b></div><div class="detail-value">${trip.startTime || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>End</b></div><div class="detail-value">${trip.endTime || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Duration</b></div><div class="detail-value">${trip.duration || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Total KM</b></div><div class="detail-value">${trip.totalKm || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Total Amount</b></div><div class="detail-value">₹${trip.totalAmount || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Payment</b></div><div class="detail-value">${trip.paymentStatus || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Paid</b></div><div class="detail-value">₹${trip.paidAmount || ""}</div></div>
+        <div class="detail-row"><div class="detail-label"><b>Balance</b></div><div class="detail-value">₹${trip.balanceAmount || ""}</div></div>
       `;
       modalBg.classList.add("active");
     }
