@@ -1,164 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Attendance - NST Travels</title>
+  <title>Attendance Calendar - NST Travels</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background-color: #f3f4f6;
-    }
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      padding: 2rem;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    }
-    table {
-      font-size: 0.9rem;
-      width: 100%;
-    }
-    th, td {
-      padding: 12px;
-      text-align: left;
-    }
-    th {
-      background-color: #f9fafb;
-      font-weight: 600;
-    }
-    tr {
-      transition: background-color 0.2s ease-in-out;
-    }
-    tr:hover {
-      background-color: #f1f5f9;
-    }
-    .status-select {
-      width: 120px;
-      padding: 0.5rem;
-      border-radius: 0.375rem;
+    body { font-family: 'Inter', sans-serif; background: #f3f4f6; }
+    .container { max-width: 700px; margin: auto; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);}
+    .summary-table th, .summary-table td {
+      text-align: center; min-width: 60px; max-width: 120px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       border: 1px solid #d1d5db;
     }
-    .status-select:focus {
-      outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-    }
-    @media (max-width: 640px) {
-      table {
-        font-size: 0.8rem;
-      }
-      .status-select {
-        width: 100px;
-      }
-      .btn {
-        font-size: 0.75rem;
-        padding: 0.5rem 0.75rem;
-      }
-    }
+    .summary-table { border-collapse: collapse; }
+    .present { background: #bbf7d0; }
+    .absent { background: #fecaca; }
+    .leave { background: #fef9c3; }
+    .service { background: #fef2f2; }
+    .noduty { background: #e0e7ff; }
+    .stat { font-weight: bold; }
+    .legend-dot { display: inline-block; width: 1em; height: 1em; border-radius: 50%; margin-right: 0.5em; }
+    .dropdown { min-width: 200px; }
+    .summary-box { background: #f3f4f6; border-radius: 0.5em; padding: 1em; margin-bottom: 1em; }
+    .summary-box span { font-weight: bold; }
+    .cell-note { font-size: 0.85em; color: #444; }
   </style>
 </head>
 <body>
-  <!-- Navigation Bar -->
-  <nav class="bg-white shadow-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="flex items-center">
-          <a href="#" class="text-2xl font-bold text-indigo-600">NST Travels</a>
-        </div>
-        <div class="hidden sm:flex items-center space-x-4">
-          <a href="admin-dashboard.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
-          <a href="attendance.html" class="text-indigo-600 font-semibold px-3 py-2 rounded-md text-sm font-medium">Attendance</a>
-          <a href="driver-dashboard.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Driver Dashboard</a>
-          <a href="drivers-vehicles.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Drivers & Vehicles</a>
-          <a href="payment-summary.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Payment Summary</a>
-          <a href="revenue.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Revenue</a>
-          <a href="trip-summary.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Trip Summary</a>
-        </div>
+  <div class="container mt-8">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6"><i class="fas fa-calendar-alt mr-2"></i> Attendance Calendar</h2>
+    <div class="flex gap-3 items-center mb-4 flex-wrap">
+      <label for="monthPicker" class="font-semibold">Month:</label>
+      <input type="month" id="monthPicker" class="border rounded px-3 py-2" />
+      <select id="viewType" class="dropdown">
+        <option value="driver">Drivers</option>
+        <option value="vehicle">Vehicles</option>
+      </select>
+      <select id="entityDropdown" class="dropdown"></select>
+      <button id="searchBtn" class="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700">Show</button>
+      <button id="exportBtn" class="bg-green-600 text-white px-4 py-2 hover:bg-green-700">Export to CSV</button>
+      <div class="ml-auto flex gap-4">
+        <span><span class="legend-dot" style="background:#bbf7d0"></span>P</span>
+        <span><span class="legend-dot" style="background:#fecaca"></span>A</span>
+        <span><span class="legend-dot" style="background:#fef9c3"></span>L</span>
+        <span><span class="legend-dot" style="background:#fef2f2"></span>S</span>
+        <span><span class="legend-dot" style="background:#e0e7ff"></span>N</span>
       </div>
     </div>
-  </nav>
-
-  <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">📅 Attendance</h2>
-
-    <div class="flex flex-wrap gap-4 mb-6">
-      <div class="flex-1 min-w-[200px]">
-        <input type="date" id="dateFilter" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Filter by Date" />
-      </div>
-      <div class="flex-1 min-w-[200px]">
-        <select id="driverFilter" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Filter by Driver">
-          <option value="">All Drivers</option>
-        </select>
-      </div>
-      <div class="flex-1 min-w-[200px]">
-        <select id="vehicleFilter" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Filter by Vehicle">
-          <option value="">All Vehicles</option>
-        </select>
-      </div>
-    </div>
-
-    <h3 class="text-xl font-semibold text-gray-900 mb-4">Drivers Attendance</h3>
-    <div class="overflow-x-auto mb-8">
-      <table class="table-auto border-collapse border border-gray-200" id="driverAttendanceTable">
-        <thead>
-          <tr>
-            <th class="border border-gray-200">Date</th>
-            <th class="border border-gray-200">Name</th>
-            <th class="border border-gray-200">Status</th>
-          </tr>
-        </thead>
-        <tbody id="driverAttendanceTableBody">
-          <tr><td colspan="3" class="text-center py-4 text-gray-600">Loading...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h3 class="text-xl font-semibold text-gray-900 mb-4">Vehicles Attendance</h3>
-    <div class="overflow-x-auto mb-8">
-      <table class="table-auto border-collapse border border-gray-200" id="vehicleAttendanceTable">
-        <thead>
-          <tr>
-            <th class="border border-gray-200">Date</th>
-            <th class="border border-gray-200">Name</th>
-            <th class="border border-gray-200">Status</th>
-          </tr>
-        </thead>
-        <tbody id="vehicleAttendanceTableBody">
-          <tr><td colspan="3" class="text-center py-4 text-gray-600">Loading...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="flex flex-wrap gap-4">
-      <button class="btn bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700" onclick="exportToExcel()">Export to Excel</button>
-      <button class="btn bg-red-600 text-white px-6 py-3 rounded-md hover:bg-red-700" onclick="exportToPDF()">Export to PDF</button>
-      <button class="btn bg-green-100 text-green-800 px-6 py-3 rounded-md hover:bg-green-200 flex items-center" onclick="shareViaWhatsApp()">
-        <i class="fa fa-whatsapp mr-2"></i> Share via WhatsApp
-      </button>
-    </div>
+    <div id="attendanceSummary"></div>
+    <div id="attendanceResult"></div>
   </div>
-
-  <!-- Footer -->
-  <footer class="bg-gray-800 text-white py-6 mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <p>© 2025 NST Travels. All rights reserved.</p>
-    </div>
-  </footer>
-
-  <!-- Existing Scripts -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+    import { getDatabase, ref, child, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
     const firebaseConfig = {
       apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
       authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
@@ -168,314 +61,202 @@
       messagingSenderId: "395599682835",
       appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const dbRef = ref(db);
 
-    let allDrivers = [];
-    let allVehicles = [];
-    let attendanceData = {};
-    let allTrips = [];
+    let drivers = [], vehicles = [];
 
-    function loadData() {
-      // Set default date to today
-      const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-      document.getElementById('dateFilter').value = today;
-
-      // Load drivers
-      onValue(ref(db, 'drivers'), snapshot => {
-        allDrivers = [];
-        snapshot.forEach(child => {
-          allDrivers.push(child.val());
-        });
-        populateFilters();
-        renderTables();
-      });
-
-      // Load vehicles
-      onValue(ref(db, 'vehicles'), snapshot => {
-        allVehicles = [];
-        snapshot.forEach(child => {
-          allVehicles.push(child.val());
-        });
-        populateFilters();
-        renderTables();
-      });
-
-      // Load attendance data
-      onValue(ref(db, 'attendance'), snapshot => {
-        attendanceData = snapshot.val() || {};
-        renderTables();
-      });
-
-      // Load trips to determine presence
-      onValue(ref(db, 'trips'), snapshot => {
-        allTrips = [];
-        snapshot.forEach(child => {
-          allTrips.push(child.val());
-        });
-        updateAttendanceFromTrips();
-        renderTables();
-      });
+    // FIXED: Always use UTC to avoid timezone issues
+    function getDaysInMonth(year, month) {
+      const days = [];
+      let d = new Date(Date.UTC(year, month - 1, 1));
+      while (d.getUTCMonth() === month - 1) {
+        const yyyy = d.getUTCFullYear();
+        const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const dd = String(d.getUTCDate()).padStart(2, '0');
+        days.push(`${yyyy}-${mm}-${dd}`);
+        d.setUTCDate(d.getUTCDate() + 1);
+      }
+      return days;
     }
 
-    function updateAttendanceFromTrips() {
-      // Process trips to mark drivers and vehicles as Present
-      allTrips.forEach(trip => {
-        if (trip.date && trip.driverName && trip.vehicleModel) {
-          const date = trip.date;
-          if (!attendanceData[date]) attendanceData[date] = { drivers: {}, vehicles: {} };
-          attendanceData[date].drivers[trip.driverName] = { status: 'Present' };
-          attendanceData[date].vehicles[trip.vehicleModel] = { status: 'Present' };
+    function renderAttendanceCalendar(entity, attendanceMap, tripMap, days, type) {
+      let html = `<div class="mb-2 font-bold">${type === "driver" ? "Driver" : "Vehicle"}: ${type === "driver" ? entity.name : entity.model} (${type === "driver" ? entity.number : entity.number})</div>`;
+      html += `<div class="overflow-x-auto"><table class="summary-table min-w-full bg-white rounded-lg shadow"><thead><tr><th>Date</th><th>Status</th><th>Trip/Hrs</th></tr></thead><tbody>`;
+      let present = 0, totalKm = 0, totalHrs = 0;
+      days.forEach(day => {
+        const status = (attendanceMap[day]) || "Absent";
+        let statusClass = "";
+        let short = "A";
+        let tripCell = "";
+        if (status === "Present") {
+          statusClass = "present"; short = "P"; present++;
+          const trips = (tripMap[day]) || [];
+          const totalH = trips.reduce((sum, t) => sum + (parseFloat(t.duration) || 0), 0);
+          const tripCount = trips.length;
+          const totalK = trips.reduce((sum, t) => sum + (parseFloat(t.totalKm) || 0), 0);
+          totalKm += totalK;
+          totalHrs += totalH;
+          tripCell = tripCount ? `${tripCount} - Trip / ${totalH} Hrs` : "";
         }
+        else if (status === "Leave") { statusClass = "leave"; short = "L"; }
+        else if (status === "Service") { statusClass = "service"; short = "S"; }
+        else if (status === "No Duty") { statusClass = "noduty"; short = "N"; }
+        html += `<tr><td>${day.slice(8,10)}-${day.slice(5,7)}-${day.slice(0,4)}</td><td class="${statusClass}" title="${status}">${short}</td><td>${tripCell}</td></tr>`;
       });
+      html += `</tbody></table></div>`;
+
+      document.getElementById("attendanceResult").innerHTML = html;
+
+      // Summary
+      const percent = ((present / days.length) * 100).toFixed(1);
+      let summaryHtml = `<div class="summary-box">`;
+      summaryHtml += `<span>Present: ${present} / ${days.length} days (${percent}%)</span><br>`;
+      summaryHtml += `<span>Total KM: ${totalKm.toFixed(2)}</span> | <span>Total Hrs: ${totalHrs.toFixed(2)}</span>`;
+      summaryHtml += `</div>`;
+      document.getElementById("attendanceSummary").innerHTML = summaryHtml;
+
+      // For export
+      let csv = [type === "driver" ? "Driver Attendance" : "Vehicle Attendance"];
+      csv.push(["Date","Status","Trip/Hrs"].join(","));
+      days.forEach(day => {
+        const status = (attendanceMap[day]) || "Absent";
+        let short = "A";
+        let tripCell = "";
+        if (status === "Present") {
+          short = "P";
+          const trips = (tripMap[day]) || [];
+          const totalH = trips.reduce((sum, t) => sum + (parseFloat(t.duration) || 0), 0);
+          const tripCount = trips.length;
+          tripCell = tripCount ? `${tripCount} - Trip / ${totalH} Hrs` : "";
+        }
+        else if (status === "Leave") short = "L";
+        else if (status === "Service") short = "S";
+        else if (status === "No Duty") short = "N";
+        csv.push([day.slice(8,10)+"-"+day.slice(5,7)+"-"+day.slice(0,4), short, tripCell].join(","));
+      });
+      document.getElementById("attendanceResult").dataset.csv = csv.join("\n");
     }
 
-    function populateFilters() {
-      const driverFilter = document.getElementById('driverFilter');
-      driverFilter.innerHTML = '<option value="">All Drivers</option>';
-      allDrivers.forEach(d => {
-        driverFilter.innerHTML += `<option value="${d.name}">${d.name}</option>`;
-      });
-
-      const vehicleFilter = document.getElementById('vehicleFilter');
-      vehicleFilter.innerHTML = '<option value="">All Vehicles</option>';
-      allVehicles.forEach(v => {
-        vehicleFilter.innerHTML += `<option value="${v.model}">${v.model}</option>`;
-      });
-    }
-
-    function renderTables() {
-      const dateFilter = document.getElementById('dateFilter').value;
-      const driverFilter = document.getElementById('driverFilter').value;
-      const vehicleFilter = document.getElementById('vehicleFilter').value;
-
-      // Render Drivers Table
-      const driverTbody = document.getElementById('driverAttendanceTableBody');
-      driverTbody.innerHTML = '';
-      const driverRecords = allDrivers
-        .filter(driver => !driverFilter || driver.name === driverFilter)
-        .map(driver => {
-          const dateData = dateFilter ? attendanceData[dateFilter] : null;
-          const status = dateData?.drivers?.[driver.name]?.status || 'Absent';
-          return { date: dateFilter || '', name: driver.name, status };
-        });
-
-      if (driverRecords.length === 0) {
-        driverTbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-600">No driver data found</td></tr>';
-      } else {
-        driverRecords.forEach(record => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td class="border border-gray-200">${record.date || 'N/A'}</td>
-            <td class="border border-gray-200">${record.name}</td>
-            <td class="border border-gray-200">
-              <select class="status-select" data-name="${record.name}" data-type="driver" data-date="${record.date}">
-                <option value="Present" ${record.status === 'Present' ? 'selected' : ''}>Present</option>
-                <option value="Absent" ${record.status === 'Absent' ? 'selected' : ''}>Absent</option>
-              </select>
-            </td>
-          `;
-          driverTbody.appendChild(row);
-        });
+    async function showAttendance() {
+      const monthStr = document.getElementById("monthPicker").value;
+      const [year, month] = monthStr.split("-");
+      const days = getDaysInMonth(parseInt(year), parseInt(month));
+      const type = document.getElementById("viewType").value;
+      const selectedId = document.getElementById("entityDropdown").value;
+      if (!selectedId) {
+        document.getElementById("attendanceResult").innerHTML = `<div class="text-red-600 font-bold mt-4">Please select a ${type}.</div>`;
+        document.getElementById("attendanceSummary").innerHTML = "";
+        return;
       }
-
-      // Render Vehicles Table
-      const vehicleTbody = document.getElementById('vehicleAttendanceTableBody');
-      vehicleTbody.innerHTML = '';
-      const vehicleRecords = allVehicles
-        .filter(vehicle => !vehicleFilter || vehicle.model === vehicleFilter)
-        .map(vehicle => {
-          const dateData = dateFilter ? attendanceData[dateFilter] : null;
-          const status = dateData?.vehicles?.[vehicle.model]?.status || 'Absent';
-          return { date: dateFilter || '', name: vehicle.model, status };
-        });
-
-      if (vehicleRecords.length === 0) {
-        vehicleTbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-600">No vehicle data found</td></tr>';
-      } else {
-        vehicleRecords.forEach(record => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td class="border border-gray-200">${record.date || 'N/A'}</td>
-            <td class="border border-gray-200">${record.name}</td>
-            <td class="border border-gray-200">
-              <select class="status-select" data-name="${record.name}" data-type="vehicle" data-date="${record.date}">
-                <option value="Present" ${record.status === 'Present' ? 'selected' : ''}>Present</option>
-                <option value="Absent" ${record.status === 'Absent' ? 'selected' : ''}>Absent</option>
-              </select>
-            </td>
-          `;
-          vehicleTbody.appendChild(row);
-        });
+      const [driversSnap, vehiclesSnap, tripsSnap, nonTripSnap, leavesSnap] = await Promise.all([
+        get(child(dbRef, 'drivers')),
+        get(child(dbRef, 'vehicles')),
+        get(child(dbRef, 'trips')),
+        get(child(dbRef, 'nonTripDays')),
+        get(child(dbRef, 'driverLeaves'))
+      ]);
+      drivers = driversSnap.exists() ? Object.values(driversSnap.val()) : [];
+      vehicles = vehiclesSnap.exists() ? Object.values(vehiclesSnap.val()) : [];
+      let entity = type === "driver"
+        ? drivers.find(d => d.name === selectedId)
+        : vehicles.find(v => v.model === selectedId);
+      if (!entity) {
+        document.getElementById("attendanceResult").innerHTML = `<div class="text-red-600 font-bold mt-4">Not found.</div>`;
+        document.getElementById("attendanceSummary").innerHTML = "";
+        return;
       }
-
-      // Add event listeners for status changes
-      document.querySelectorAll('.status-select').forEach(select => {
-        select.addEventListener('change', function () {
-          const name = this.dataset.name;
-          const type = this.dataset.type;
-          const date = this.dataset.date;
-          const newStatus = this.value;
-
-          if (date) {
-            const path = `attendance/${date}/${type}s/${name}`;
-            set(ref(db, path), { status: newStatus })
-              .then(() => {
-                alert(`Attendance updated to "${newStatus}" for ${type} ${name} on ${date}`);
-              })
-              .catch(error => {
-                alert('Error updating attendance: ' + error.message);
-              });
+      // Build attendance and trip maps for this entity
+      const attendanceMap = {};
+      const tripMap = {};
+      if (tripsSnap.exists()) {
+        Object.values(tripsSnap.val()).forEach(trip => {
+          if (days.includes(trip.date)) {
+            if (type === "driver" && trip.driverName === entity.name) {
+              attendanceMap[trip.date] = "Present";
+              if (!tripMap[trip.date]) tripMap[trip.date] = [];
+              tripMap[trip.date].push(trip);
+            }
+            if (type === "vehicle" && trip.vehicleModel === entity.model) {
+              attendanceMap[trip.date] = "Present";
+              if (!tripMap[trip.date]) tripMap[trip.date] = [];
+              tripMap[trip.date].push(trip);
+            }
           }
         });
-      });
-    }
-
-    function exportToExcel() {
-      const dateFilter = document.getElementById('dateFilter').value;
-      const driverFilter = document.getElementById('driverFilter').value;
-      const vehicleFilter = document.getElementById('vehicleFilter').value;
-
-      const driverRecords = allDrivers
-        .filter(driver => !driverFilter || driver.name === driverFilter)
-        .map(driver => {
-          const dateData = dateFilter ? attendanceData[dateFilter] : null;
-          const status = dateData?.drivers?.[driver.name]?.status || 'Absent';
-          return { Date: dateFilter || 'N/A', Name: driver.name, Type: 'Driver', Status: status };
-        });
-
-      const vehicleRecords = allVehicles
-        .filter(vehicle => !vehicleFilter || vehicle.model === vehicleFilter)
-        .map(vehicle => {
-          const dateData = dateFilter ? attendanceData[dateFilter] : null;
-          const status = dateData?.vehicles?.[vehicle.model]?.status || 'Absent';
-          return { Date: dateFilter || 'N/A', Name: vehicle.model, Type: 'Vehicle', Status: status };
-        });
-
-      const allRecords = [...driverRecords, ...vehicleRecords];
-
-      if (allRecords.length === 0) {
-        alert('No attendance data to export.');
-        return;
       }
-
-      const XLSX = window.XLSX;
-      const ws = XLSX.utils.json_to_sheet(allRecords);
-      ws['!cols'] = [{ wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 15 }];
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
-      XLSX.writeFile(wb, 'NST_Attendance.xlsx');
-    }
-
-    function exportToPDF() {
-      const dateFilter = document.getElementById('dateFilter').value;
-      const driverFilter = document.getElementById('driverFilter').value;
-      const vehicleFilter = document.getElementById('vehicleFilter').value;
-
-      const driverRecords = allDrivers
-        .filter(driver => !driverFilter || driver.name === driverFilter)
-        .map(driver => {
-          const dateData = dateFilter ? attendanceData[dateFilter] : null;
-          const status = dateData?.drivers?.[driver.name]?.status || 'Absent';
-          return [dateFilter || 'N/A', driver.name, 'Driver', status];
+      if (type === "vehicle" && nonTripSnap.exists()) {
+        const nonTrip = nonTripSnap.val();
+        days.forEach(day => {
+          if (nonTrip[day] && nonTrip[day].vehicleModel === entity.model) {
+            attendanceMap[day] = nonTrip[day].status === "No Duty" ? "No Duty" : "Service";
+          }
         });
-
-      const vehicleRecords = allVehicles
-        .filter(vehicle => !vehicleFilter || vehicle.model === vehicleFilter)
-        .map(vehicle => {
-          const dateData = dateFilter ? attendanceData[dateFilter] : null;
-          const status = dateData?.vehicles?.[vehicle.model]?.status || 'Absent';
-          return [dateFilter || 'N/A', vehicle.model, 'Vehicle', status];
-        });
-
-      const allRecords = [...driverRecords, ...vehicleRecords];
-
-      if (allRecords.length === 0) {
-        alert('No attendance data to export.');
-        return;
       }
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.text('NST Attendance Report', 14, 15);
-      doc.autoTable({
-        head: [['Date', 'Name', 'Type', 'Status']],
-        body: allRecords,
-        startY: 20,
-        styles: { fontSize: 8 },
-        columnStyles: {
-          0: { cellWidth: 30 },
-          1: { cellWidth: 50 },
-          2: { cellWidth: 30 },
-          3: { cellWidth: 30 }
-        }
-      });
-      doc.save('NST_Attendance.pdf');
+      if (type === "driver" && leavesSnap.exists()) {
+        const leaves = leavesSnap.val();
+        Object.entries(leaves).forEach(([key, info]) => {
+          const [leaveDate] = key.split("_");
+          if (days.includes(leaveDate) && info.driverName === entity.name) {
+            attendanceMap[leaveDate] = "Leave";
+          }
+        });
+      }
+      days.forEach(day => { if (!attendanceMap[day]) attendanceMap[day] = "Absent"; });
+      renderAttendanceCalendar(entity, attendanceMap, tripMap, days, type);
     }
 
-    function shareViaWhatsApp() {
-      const dateFilter = document.getElementById('dateFilter').value;
-      const driverFilter = document.getElementById('driverFilter').value;
-      const vehicleFilter = document.getElementById('vehicleFilter').value;
-
-      const driverRecords = allDrivers
-        .filter(driver => !driverFilter || driver.name === driverFilter)
-        .map(driver => {
-          const dateData = dateFilter ? attendanceData[dateFilter] : null;
-          const status = dateData?.drivers?.[driver.name]?.status || 'Absent';
-          return { Type: 'Driver', Status: status };
-        });
-
-      const vehicleRecords = allVehicles
-        .filter(vehicle => !vehicleFilter || vehicle.model === vehicleFilter)
-        .map(vehicle => {
-          const dateData = dateFilter ? attendanceData[dateFilter] : null;
-          const status = dateData?.vehicles?.[vehicle.model]?.status || 'Absent';
-          return { Type: 'Vehicle', Status: status };
-        });
-
-      const driverCount = driverRecords.length;
-      const vehicleCount = vehicleRecords.length;
-      const presentDrivers = driverRecords.filter(r => r.Status === 'Present').length;
-      const presentVehicles = vehicleRecords.filter(r => r.Status === 'Present').length;
-
-      const message = `
-📅 *NST Attendance Summary*
-
-📅 *Date*: ${dateFilter || 'All'}
-👨‍✈ *Driver Filter*: ${driverFilter || 'All'}
-🚘 *Vehicle Filter*: ${vehicleFilter || 'All'}
-
-📊 *Drivers Attendance*
-• Total Drivers: ${driverCount}
-• Present Drivers: ${presentDrivers}
-• Absent Drivers: ${driverCount - presentDrivers}
-
-📊 *Vehicles Attendance*
-• Total Vehicles: ${vehicleCount}
-• Present Vehicles: ${presentVehicles}
-• Absent Vehicles: ${vehicleCount - presentVehicles}
-      `.trim();
-
-      const url = 'https://wa.me/?text=' + encodeURIComponent(message);
-      window.open(url, '_blank');
+    // Populate dropdowns
+    async function populateDropdowns() {
+      const [driversSnap, vehiclesSnap] = await Promise.all([
+        get(child(dbRef, 'drivers')),
+        get(child(dbRef, 'vehicles'))
+      ]);
+      drivers = driversSnap.exists() ? Object.values(driversSnap.val()) : [];
+      vehicles = vehiclesSnap.exists() ? Object.values(vehiclesSnap.val()) : [];
+      const driverOptions = drivers.map(d => `<option value="${d.name}">${d.name} (${d.number})</option>`).join("");
+      const vehicleOptions = vehicles.map(v => `<option value="${v.model}">${v.model} (${v.number})</option>`).join("");
+      const entityDropdown = document.getElementById("entityDropdown");
+      entityDropdown.innerHTML = driverOptions;
     }
 
-    // Expose functions to global scope for HTML onclick
-    window.exportToExcel = exportToExcel;
-    window.exportToPDF = exportToPDF;
-    window.shareViaWhatsApp = shareViaWhatsApp;
-
-    ['dateFilter', 'driverFilter', 'vehicleFilter'].forEach(id => {
-      document.getElementById(id).addEventListener('change', renderTables);
+    document.getElementById("viewType").addEventListener("change", function() {
+      const entityDropdown = document.getElementById("entityDropdown");
+      if (this.value === "driver") {
+        entityDropdown.innerHTML = drivers.map(d => `<option value="${d.name}">${d.name} (${d.number})</option>`).join("");
+      } else {
+        entityDropdown.innerHTML = vehicles.map(v => `<option value="${v.model}">${v.model} (${v.number})</option>`).join("");
+      }
+      showAttendance();
     });
 
-    loadData();
-  </script>
+    document.getElementById("searchBtn").addEventListener("click", showAttendance);
+    document.getElementById("monthPicker").addEventListener("change", showAttendance);
+    document.getElementById("entityDropdown").addEventListener("change", showAttendance);
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    // Export to CSV
+    document.getElementById("exportBtn").addEventListener("click", function() {
+      const csv = document.getElementById("attendanceResult").dataset.csv || "";
+      if (!csv) { alert("No data to export."); return; }
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `NST-Attendance-Calendar.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Set default month to current and populate dropdowns
+    window.addEventListener("DOMContentLoaded", async () => {
+      const now = new Date();
+      document.getElementById("monthPicker").value = now.toISOString().slice(0,7);
+      await populateDropdowns();
+      showAttendance();
+    });
+  </script>
 </body>
 </html>
