@@ -235,7 +235,7 @@
           </div>
           <div>
             <label for="duration" class="form-label block mb-1">Duration (hrs)</label>
-            <input type="number" class="input-field w-full" id="duration" readonly aria-label="Duration" />
+            <input type="text" class="input-field w-full" id="duration" aria-label="Duration" />
           </div>
           <div>
             <label for="extraHours" class="form-label block mb-1">Extra Hours</label>
@@ -246,7 +246,7 @@
       <!-- Distance Details -->
       <div>
         <h5 class="section-heading"><i class="fas fa-ruler mr-2"></i> Distance Details</h5>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg-grid-cols-4 gap-6">
           <div>
             <label for="startKm" class="form-label block mb-1">Start KM</label>
             <input type="number" class="input-field w-full" id="startKm" min="0" aria-label="Start KM" />
@@ -334,7 +334,7 @@
           </select>
         </div>
       </div>
-      <button type="submit" class="btn bg-blue-600 text-white w-full py-2 rounded-md hover:bg-blue-700" id="nonTripSaveBtn">
+      <button type="submit" class="btn bg-blue-600 text-white w-full py-2 rounded-md hover:bg-blue-700" id="nonTripSave. SaveBtn">
         <i class="fas fa-save mr-2"></i> <span id="nonTripBtnText">Save Non-Trip Day</span>
       </button>
     </form>
@@ -754,13 +754,18 @@
     function calcDuration() {
       const start = document.getElementById("startTime").value;
       const end = document.getElementById("endTime").value;
+      const durationInput = document.getElementById("duration");
+      
+      // Only calculate duration if both start and end times are selected
       if (start && end) {
         let sm = timeToMinutes(start);
         let em = timeToMinutes(end);
         if (em < sm) em += 24 * 60;
-        document.getElementById("duration").value = ((em - sm) / 60).toFixed(2);
+        durationInput.value = ((em - sm) / 60).toFixed(2);
+        durationInput.readOnly = true; // Make readonly when calculated
       } else {
-        document.getElementById("duration").value = "";
+        // Allow manual input when either start or end time is not selected
+        durationInput.readOnly = false; // Remove readonly for manual input
       }
     }
 
