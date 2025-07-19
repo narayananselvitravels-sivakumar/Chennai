@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Driver/Vehicle Statistics - NST Travels</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #f3f4f6; }
+    .container { max-width: 900px; margin: auto; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);}
+    .summary-box { background: #f3f4f6; border-radius: 0.5em; padding: 1em; margin-bottom: 1em; }
+    .summary-table th, .summary-table td { text-align: left; min-width: 80px; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border: 1px solid #d1d5db;}
+    .summary-table { border-collapse: collapse; }
+    .dropdown { min-width: 200px; }
+    @media (max-width: 700px) {
+      .container { padding: 0.5em; }
+      .summary-table th, .summary-table td { min-width: 60px; max-width: 120px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-8">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6"><i class="fas fa-chart-bar mr-2"></i> Driver/Vehicle Full Statistics</h2>
+    <form id="statsForm" class="flex gap-3 items-center mb-4 flex-wrap" onsubmit="return false;">
+      <select id="typeDropdown" class="dropdown">
+        <option value="driver">Driver</option>
+        <option value="vehicle">Vehicle</option>
+      </select>
+      <select id="entityDropdown" class="dropdown"></select>
+      <input type="month" id="monthPicker" class="border rounded px-3 py-2" />
+      <button id="searchBtn" class="bg-blue-600 text-white px-4 py-2 hover:bg-blue-700" type="submit">Show</button>
+      <button id="exportBtn" class="bg-green-600 text-white px-4 py-2 hover:bg-green-700" type="button">Export to CSV</button>
+    </form>
+    <div id="statsSummary"></div>
+    <div class="mt-6">
+      <h4 class="font-bold mb-2">Trips List</h4>
+      <div class="overflow-x-auto">
+        <table class="summary-table min-w-full bg-white rounded-lg shadow">
+          <thead id="tripsTableHead"></thead>
+          <tbody id="tripsTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, child, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
+      authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
+      databaseURL: "https://narayananselvitravels-26dcb-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "narayananselvitravels-26dcb",
+      storageBucket: "narayananselvitravels-26dcb.appspot.com",
+      messagingSenderId: "395599682835",
+      appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dbRef = ref(db);
+
+    let drivers = [], vehicles = [];
+
+    function formatDate(dateStr) {
+      if (!dateStr) return "";
+      const [y, m, d] = dateStr.split("-");
+      if (y && m && d) return `${d}-${m}-${y}`;
+      return dateStr;
+    }
+
+    async function populateEntities() {
+      const type = document.getElementById("typeDropdown").value;
+      if (type === "driver") {
+        const snap = await get(child(dbRef, 'drivers'));
+        drivers = snap.exists() ? Object.values(snap.val()) : [];
+        document.getElementById("entityDropdown").innerHTML =
+          drivers.map(d => `<option value="${d.name}">${d.name} (${d.number})</option>`).join("");
+      } else {
+        const snap = await get(child(dbRef, 'vehicles'));
+        vehicles = snap.exists() ? Object.values(snap.val()) : [];
+        document.getElementById("entityDropdown").innerHTML =
+          vehicles.map(v => `<option value="${v.model}|||${v.number}">${v.model} (${v.number})</option>`).join("");
+      }
+    }
+
+    async function showStats() {
+      const type = document.getElementById("typeDropdown").value;
+      const entityValue = document.getElementById("entityDropdown").value;
+      const monthStr = document.getElementById("monthPicker").value;
+      const [year, month] = monthStr ? monthStr.split("-") : [null, null];
+      const [tripsSnap] = await Promise.all([
+        get(child(dbRef, 'trips'))
+      ]);
+      let trips = [];
+      let entityLabel = "";
+      if (type === "driver") {
+        const driver = drivers.find(d => d.name === entityValue);
+        entityLabel = driver ? `${driver.name} (${driver.number})` : "";
+        if (tripsSnap.exists()) {
+          trips = Object.values(tripsSnap.val()).filter(trip =>
+            trip.driverName === entityValue &&
+            (!monthStr || (trip.date && trip.date.startsWith(`${year}-${month}`)))
+          );
+        }
+      } else {
+        const [vehicleModel, vehicleNumber] = entityValue.split("|||");
+        const vehicle = vehicles.find(v => v.model === vehicleModel && v.number === vehicleNumber);
+        entityLabel = vehicle ? `${vehicle.model} (${vehicle.number})` : "";
+        if (tripsSnap.exists()) {
+          trips = Object.values(tripsSnap.val()).filter(trip =>
+            trip.vehicleModel && trip.vehicleNumber &&
+            trip.vehicleModel.trim().toLowerCase() === vehicleModel.trim().toLowerCase() &&
+            trip.vehicleNumber.trim().toLowerCase() === vehicleNumber.trim().toLowerCase() &&
+            (!monthStr || (trip.date && trip.date.startsWith(`${year}-${month}`)))
+          );
+        }
+      }
+      // Stats
+      const totalTrips = trips.length;
+      const totalKm = trips.reduce((sum, t) => sum + (parseFloat(t.totalKm) || 0), 0);
+      const totalHrs = trips.reduce((sum, t) => sum + (parseFloat(t.duration) || 0), 0);
+      // Attendance %
+      const daysSet = new Set(trips.map(t => t.date));
+      const daysInMonth = monthStr ? new Date(year, month, 0).getDate() : null;
+      const attendancePercent = monthStr && daysInMonth ? ((daysSet.size / daysInMonth) * 100).toFixed(1) : "";
+      // Render summary
+      let html = `<div class="summary-box">`;
+      html += `<span>${type === "driver" ? "Driver" : "Vehicle"}: ${entityLabel}</span><br>`;
+      html += `<span>Total Trips: ${totalTrips}</span><br>`;
+      html += `<span>Total KM: ${totalKm.toFixed(2)}</span> | <span>Total Hrs: ${totalHrs.toFixed(2)}</span><br>`;
+      if (attendancePercent) html += `<span>Attendance: ${attendancePercent}% (${daysSet.size} days present in month)</span>`;
+      html += `</div>`;
+      document.getElementById("statsSummary").innerHTML = html;
+      // Render trips table
+      let tripRows = "";
+      trips.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      let headHtml = "<tr><th>Date</th><th>Duty</th>";
+      if (type === "driver") headHtml += "<th>Vehicle</th>";
+      else headHtml += "<th>Driver</th>";
+      headHtml += "<th>KM</th><th>Hrs</th><th>Payment</th></tr>";
+      document.getElementById("tripsTableHead").innerHTML = headHtml;
+      trips.forEach(t => {
+        tripRows += `<tr>
+          <td>${formatDate(t.date)}</td>
+          <td>${t.duty || ""}</td>
+          <td>${type === "driver" ? (t.vehicleModel || "") + " " + (t.vehicleNumber || "") : (t.driverName || "")}</td>
+          <td>${t.totalKm || ""}</td>
+          <td>${t.duration || ""}</td>
+          <td>${t.paymentStatus || ""}</td>
+        </tr>`;
+      });
+      document.getElementById("tripsTable").innerHTML = tripRows;
+      // Export to CSV
+      let csv = [type === "driver"
+        ? "Date,Duty,Vehicle,KM,Hrs,Payment"
+        : "Date,Duty,Driver,KM,Hrs,Payment"];
+      trips.forEach(t => {
+        csv.push([
+          formatDate(t.date),
+          t.duty || "",
+          type === "driver"
+            ? (t.vehicleModel || "") + (t.vehicleNumber ? " ("+t.vehicleNumber+")" : "")
+            : t.driverName || "",
+          t.totalKm || "",
+          t.duration || "",
+          t.paymentStatus || ""
+        ].join(","));
+      });
+      document.getElementById("tripsTable").dataset.csv = csv.join("\n");
+    }
+
+    document.getElementById("typeDropdown").addEventListener("change", async function() {
+      await populateEntities();
+      showStats();
+    });
+    document.getElementById("searchBtn").addEventListener("click", showStats);
+    document.getElementById("monthPicker").addEventListener("change", showStats);
+    document.getElementById("entityDropdown").addEventListener("change", showStats);
+
+    // Export to CSV
+    document.getElementById("exportBtn").addEventListener("click", function() {
+      const csv = document.getElementById("tripsTable").dataset.csv || "";
+      if (!csv) { alert("No data to export."); return; }
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `NST-Stats.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    window.addEventListener("DOMContentLoaded", async () => {
+      const now = new Date();
+      document.getElementById("monthPicker").value = now.toISOString().slice(0,7);
+      await populateEntities();
+      showStats();
+    });
+  </script>
+</body>
+</html>
