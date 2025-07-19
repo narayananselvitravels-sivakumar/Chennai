@@ -5,189 +5,90 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Payment Summary - NST Travels</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      background-color: #f3f4f6;
-    }
-    .container {
-      max-width: 1200px;
-      margin: auto;
-      padding: 2rem;
-    }
-    .table-wrapper {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      padding: 1.5rem;
-      overflow-x: auto;
-    }
-    table {
-      font-size: 0.9rem;
-      width: 100%;
-      min-width: 1000px;
-    }
-    th, td {
-      padding: 12px;
-      text-align: left;
-      vertical-align: middle;
-    }
-    th {
-      background-color: #f9fafb;
-      font-weight: 600;
-    }
-    tr {
-      transition: background-color 0.2s ease-in-out;
-    }
-    tr:hover {
-      background-color: #f1f5f9;
-    }
-    .editable-input, .status-select {
-      width: 100px;
-      padding: 0.5rem;
-      border-radius: 0.375rem;
-      border: 1px solid #d1d5db;
-      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    }
-    .editable-input:focus, .status-select:focus {
-      outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-    }
-    .status-select {
-      min-width: 140px;
-    }
-    .btn {
-      transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
-    }
-    .btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-    }
-    .btn:disabled {
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-    @media (max-width: 640px) {
-      table {
-        font-size: 0.8rem;
-      }
-      .editable-input, .status-select {
-        width: 80px;
-      }
-      .status-select {
-        min-width: 120px;
-      }
-      .btn {
-        font-size: 0.75rem;
-        padding: 0.5rem 0.75rem;
-      }
-    }
+    body { font-family: 'Inter', sans-serif; background: #f3f4f6; }
+    .container { max-width: 1100px; margin: auto; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);}
+    .summary-table th, .summary-table td { text-align: left; min-width: 100px; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .action-btn { margin: 0 2px; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none;}
+    .delete-btn { background: #ef4444; color: #fff; }
+    .delete-btn:hover { background: #dc2626; }
+    .view-btn { background: #3b82f6; color: #fff; }
+    .view-btn:hover { background: #2563eb; }
+    .filter-bar { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .filter-bar input, .filter-bar select { border: 1px solid #d1d5db; border-radius: 0.5rem; padding: 0.5rem 1rem; font-size: 1rem; }
+    .overflow-x-auto { overflow-x: auto; }
+    .modal-bg { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); }
+    .modal-bg.active { display: flex; align-items: center; justify-content: center; }
+    .modal-content { background: #fff; border-radius: 1rem; max-width: 500px; width: 95vw; padding: 2rem; box-shadow: 0 8px 32px rgba(0,0,0,0.2);}
+    .modal-content h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; }
+    .modal-content table { width: 100%; }
+    .modal-content td { padding: 0.3em 0.5em; }
+    .modal-close { float: right; font-size: 1.5rem; color: #ef4444; cursor: pointer; }
+    tfoot td { font-weight: bold; background: #f3f4f6; }
   </style>
 </head>
 <body>
-  <!-- Navigation Bar -->
-  <nav class="bg-white shadow-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <div class="flex items-center">
-          <a href="#" class="text-2xl font-bold text-indigo-600">NST Travels</a>
-        </div>
-        <div class="hidden sm:flex items-center space-x-4">
-          <a href="admin-dashboard.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
-          <a href="attendance.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Attendance</a>
-          <a href="driver-dashboard.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Driver Dashboard</a>
-          <a href="drivers-vehicles.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Drivers & Vehicles</a>
-          <a href="payment-summary.html" class="text-indigo-600 font-semibold px-3 py-2 rounded-md text-sm font-medium">Payment Summary</a>
-          <a href="revenue.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Revenue</a>
-          <a href="trip-summary.html" class="text-gray-600 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium">Trip Summary</a>
-        </div>
-      </div>
+  <div class="container mt-8">
+    <h2 class="text-3xl font-bold text-gray-900 mb-8"><i class="fas fa-money-bill-wave mr-2"></i> Payment Summary</h2>
+    <div class="filter-bar">
+      <input type="text" id="searchInput" placeholder="Search customer, driver, trip ID..." />
+      <select id="statusFilter">
+        <option value="">All Status</option>
+        <option value="Paid">Paid</option>
+        <option value="Not Paid">Not Paid</option>
+        <option value="Partially Paid">Partially Paid</option>
+      </select>
+      <button id="exportBtn" class="btn bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"><i class="fas fa-file-excel mr-2"></i>Export to Excel/CSV</button>
+      <button id="pdfBtn" class="btn bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"><i class="fas fa-file-pdf mr-2"></i>Export to PDF</button>
     </div>
-  </nav>
-
-  <div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
-    <h3 class="text-2xl font-bold text-gray-900 mb-6"><i class="fas fa-money-check-dollar mr-2"></i> Payment Summary</h3>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <div>
-        <input type="date" id="startDate" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Start Date" aria-label="Start Date" />
-      </div>
-      <div>
-        <input type="date" id="endDate" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="End Date" aria-label="End Date" />
-      </div>
-      <div>
-        <select id="driverFilter" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Filter by Driver">
-          <option value="">All Drivers</option>
-        </select>
-      </div>
-      <div>
-        <select id="statusFilter" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" aria-label="Filter by Status">
-          <option value="">All Status</option>
-          <option value="Paid">Paid</option>
-          <option value="Partially Paid">Partially Paid</option>
-          <option value="Not Paid">Not Paid</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="flex flex-wrap gap-4 mb-6">
-      <button class="btn bg-red-600 text-white px-6 py-3 rounded-md disabled:bg-red-400 disabled:cursor-not-allowed" id="bulkDeleteBtn" disabled>
-        <i class="fas fa-trash mr-2"></i> Delete Selected
-      </button>
-      <button class="btn bg-indigo-600 text-white px-6 py-3 rounded-md hover:bg-indigo-700" id="exportExcelBtn">
-        <i class="fas fa-file-excel mr-2"></i> Export to Excel
-      </button>
-      <button class="btn bg-red-100 text-red-800 px-6 py-3 rounded-md hover:bg-red-200" id="exportPdfBtn">
-        <i class="fas fa-file-pdf mr-2"></i> Export to PDF
-      </button>
-    </div>
-
-    <div class="table-wrapper">
-      <table class="table-auto border-collapse border border-gray-200">
-        <thead>
-          <tr>
-            <th class="border border-gray-200"><input type="checkbox" id="selectAll" aria-label="Select All" /></th>
-            <th class="border border-gray-200">Booking ID</th>
-            <th class="border border-gray-200">Customer</th>
-            <th class="border border-gray-200">Date</th>
-            <th class="border border-gray-200">Total (₹)</th>
-            <th class="border border-gray-200">Paid (₹)</th>
-            <th class="border border-gray-200">Balance (₹)</th>
-            <th class="border border-gray-200">Status</th>
-            <th class="border border-gray-200">Driver</th>
-            <th class="border border-gray-200">Vehicle</th>
-            <th class="border border-gray-200">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="paymentTableBody">
-          <tr><td colspan="11" class="text-center py-4 text-gray-600">Loading...</td></tr>
-        </tbody>
-      </table>
+    <div class="overflow-x-auto">
+    <table class="summary-table min-w-full bg-white rounded-lg shadow">
+      <thead>
+        <tr>
+          <th>Trip ID</th>
+          <th>Date</th>
+          <th>Customer</th>
+          <th>Driver</th>
+          <th>Vehicle</th>
+          <th>Total (₹)</th>
+          <th>Paid (₹)</th>
+          <th>Balance (₹)</th>
+          <th>Payment Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="paymentSummaryTable">
+        <!-- Data rows will be inserted here -->
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="5">Total</td>
+          <td id="totalAmountCell"></td>
+          <td id="totalPaidCell"></td>
+          <td id="totalBalanceCell"></td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>
+    </table>
     </div>
   </div>
 
-  <!-- Footer -->
-  <footer class="bg-gray-800 text-white py-6 mt-auto">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-      <p>© 2025 NST Travels. All rights reserved.</p>
+  <!-- Modal for Trip View -->
+  <div id="tripModalBg" class="modal-bg">
+    <div class="modal-content">
+      <span class="modal-close" id="modalCloseBtn">&times;</span>
+      <h3>Trip Details</h3>
+      <table id="tripModalTable"></table>
     </div>
-  </footer>
+  </div>
 
-  <!-- External Libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
-
-  <!-- Existing Scripts -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
+    import { getDatabase, ref, child, get, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
     const firebaseConfig = {
       apiKey: "AIzaSyCz2rGDr0iREns6Rg6r1z5EHE3qhLDnEzs",
       authDomain: "narayananselvitravels-26dcb.firebaseapp.com",
@@ -197,253 +98,229 @@
       messagingSenderId: "395599682835",
       appId: "1:395599682835:web:9d46e03ca14aa0738dcee6"
     };
-
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
-    const paymentTableBody = document.getElementById("paymentTableBody");
+    const dbRef = ref(db);
 
-    let allTrips = [];
+    let allRows = [];
+    let lastFilteredRows = [];
 
-    function populateDriverFilter() {
-      const driverSet = new Set(allTrips.map(t => t.trip.driverName).filter(Boolean));
-      const driverFilter = document.getElementById("driverFilter");
-      driverFilter.innerHTML = '<option value="">All Drivers</option>';
-      driverSet.forEach(d => {
-        driverFilter.innerHTML += `<option value="${d}">${d}</option>`;
+    function formatDate(dateStr) {
+      if (!dateStr) return "";
+      const [y, m, d] = dateStr.split("-");
+      if (y && m && d) return `${d}-${m}-${y}`;
+      return dateStr;
+    }
+
+    function padDate(date) {
+      return date ? date : "";
+    }
+
+    function renderTable(rows) {
+      lastFilteredRows = rows;
+      const tbody = document.getElementById("paymentSummaryTable");
+      tbody.innerHTML = "";
+      let totalAmount = 0, totalPaid = 0, totalBalance = 0;
+      if (rows.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='10' class='text-center py-4'>No data found.</td></tr>";
+      } else {
+        rows.forEach(row => {
+          totalAmount += parseFloat(row.totalAmount) || 0;
+          totalPaid += parseFloat(row.paidAmount) || 0;
+          totalBalance += parseFloat(row.balanceAmount) || 0;
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="border px-2 py-2" title="${row.tripId}">${row.tripId}</td>
+            <td class="border px-2 py-2" title="${formatDate(row.date)}">${formatDate(row.date)}</td>
+            <td class="border px-2 py-2" title="${row.customer}">${row.customer}</td>
+            <td class="border px-2 py-2" title="${row.driver}">${row.driver}</td>
+            <td class="border px-2 py-2" title="${row.vehicle}">${row.vehicle}</td>
+            <td class="border px-2 py-2" title="${row.totalAmount}">${row.totalAmount}</td>
+            <td class="border px-2 py-2" title="${row.paidAmount}">${row.paidAmount}</td>
+            <td class="border px-2 py-2" title="${row.balanceAmount}">${row.balanceAmount}</td>
+            <td class="border px-2 py-2" title="${row.payment}">${row.payment}</td>
+            <td class="border px-2 py-2">
+              <button class="action-btn view-btn" data-key="${row.key}"><i class="fas fa-eye"></i> View</button>
+              <button class="action-btn delete-btn" data-key="${row.key}"><i class="fas fa-trash"></i> Delete</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+      document.getElementById("totalAmountCell").textContent = totalAmount.toFixed(2);
+      document.getElementById("totalPaidCell").textContent = totalPaid.toFixed(2);
+      document.getElementById("totalBalanceCell").textContent = totalBalance.toFixed(2);
+
+      // Delete handler
+      tbody.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.onclick = async function() {
+          const key = this.getAttribute('data-key');
+          if (key && confirm("Are you sure you want to delete this trip?")) {
+            await remove(ref(db, `trips/${key}`));
+            loadPaymentSummary();
+          }
+        };
+      });
+      // View handler
+      tbody.querySelectorAll('.view-btn').forEach(btn => {
+        btn.onclick = function() {
+          const key = this.getAttribute('data-key');
+          const trip = allRows.find(r => r.key === key).data;
+          showTripModal(trip);
+        };
       });
     }
 
-    function renderTable() {
-      paymentTableBody.innerHTML = "";
-      const startDate = document.getElementById("startDate").value;
-      const endDate = document.getElementById("endDate").value;
-      const driverFilter = document.getElementById("driverFilter").value;
-      const statusFilter = document.getElementById("statusFilter").value;
-
-      const filtered = allTrips.filter(({ trip }) => {
-        if (startDate && trip.date < startDate) return false;
-        if (endDate && trip.date > endDate) return false;
-        if (driverFilter && trip.driverName !== driverFilter) return false;
-        if (statusFilter && trip.paymentStatus !== statusFilter) return false;
+    function filterAndRender() {
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const status = document.getElementById("statusFilter").value;
+      let filtered = allRows.filter(row => {
+        if (status && row.payment !== status) return false;
+        if (search) {
+          const values = [row.customer, row.driver, row.tripId, row.vehicle].join(" ").toLowerCase();
+          return values.includes(search);
+        }
         return true;
       });
+      renderTable(filtered);
+    }
 
-      if (filtered.length === 0) {
-        paymentTableBody.innerHTML = "<tr><td colspan='11' class='text-center py-4 text-gray-600'>No records found.</td></tr>";
+    async function loadPaymentSummary() {
+      const tbody = document.getElementById("paymentSummaryTable");
+      tbody.innerHTML = "<tr><td colspan='10' class='text-center py-4'>Loading...</td></tr>";
+      allRows = [];
+      try {
+        const tripsSnap = await get(child(dbRef, 'trips'));
+        if (tripsSnap.exists()) {
+          Object.entries(tripsSnap.val()).forEach(([key, trip]) => {
+            allRows.push({
+              key,
+              tripId: trip.bookingId || "",
+              date: trip.date || "",
+              customer: trip.customerName || "",
+              driver: trip.driverName || "",
+              vehicle: (trip.vehicleModel || "") + (trip.vehicleNumber ? " (" + trip.vehicleNumber + ")" : ""),
+              totalAmount: trip.totalAmount || "",
+              paidAmount: trip.paidAmount || "",
+              balanceAmount: trip.balanceAmount || "",
+              payment: trip.paymentStatus || "",
+              data: trip
+            });
+          });
+        }
+        // Sort by date ascending
+        allRows.sort((a, b) => padDate(a.date).localeCompare(padDate(b.date)));
+        filterAndRender();
+      } catch (error) {
+        tbody.innerHTML = "<tr><td colspan='10' class='text-center py-4'>Error loading data.</td></tr>";
+      }
+    }
+
+    document.getElementById("searchInput").addEventListener("input", filterAndRender);
+    document.getElementById("statusFilter").addEventListener("change", filterAndRender);
+
+    // Export to CSV/Excel
+    document.getElementById("exportBtn").addEventListener("click", function() {
+      if (!lastFilteredRows || lastFilteredRows.length === 0) {
+        alert("No data to export.");
         return;
       }
-
-      filtered.forEach(({ trip, key }) => {
-        renderPaymentRow(trip, key);
+      const headers = [
+        "Trip ID","Date","Customer","Driver","Vehicle","Total (₹)","Paid (₹)","Balance (₹)","Payment Status"
+      ];
+      const csvRows = [headers.join(",")];
+      lastFilteredRows.forEach(row => {
+        csvRows.push([
+          row.tripId,
+          formatDate(row.date),
+          row.customer,
+          row.driver,
+          row.vehicle,
+          row.totalAmount,
+          row.paidAmount,
+          row.balanceAmount,
+          row.payment
+        ].map(v => `"${(v||"").replace(/"/g, '""')}"`).join(","));
       });
-    }
+      const csvContent = csvRows.join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "NST-Payment-Summary.csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
 
-    function renderPaymentRow(trip, key) {
-      const paidAmount = parseFloat(trip.paidAmount) || 0;
-      const totalAmount = parseFloat(trip.totalAmount) || 0;
-      const balanceAmount = totalAmount - paidAmount;
-      const row = document.createElement("tr");
+    // Export to PDF (all columns, all pages)
+    document.getElementById("pdfBtn").addEventListener("click", function() {
+      if (!lastFilteredRows || lastFilteredRows.length === 0) {
+        alert("No data to export.");
+        return;
+      }
+      const headers = [
+        "Trip ID","Date","Customer","Driver","Vehicle","Total (₹)","Paid (₹)","Balance (₹)","Payment Status"
+      ];
+      const data = lastFilteredRows.map(row => [
+        row.tripId,
+        formatDate(row.date),
+        row.customer,
+        row.driver,
+        row.vehicle,
+        row.totalAmount,
+        row.paidAmount,
+        row.balanceAmount,
+        row.payment
+      ]);
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "A4" });
+      doc.text("NST Travels - Payment Summary", 40, 30);
+      doc.autoTable({
+        head: [headers],
+        body: data,
+        startY: 40,
+        styles: { fontSize: 9, cellWidth: 'auto', overflow: 'linebreak' },
+        headStyles: { fillColor: [59, 130, 246] },
+        margin: { left: 10, right: 10 }
+      });
+      doc.save("NST-Payment-Summary.pdf");
+    });
 
-      row.innerHTML = `
-        <td class="border border-gray-200"><input type="checkbox" class="rowCheckbox" data-key="${key}" aria-label="Select Row"></td>
-        <td class="border border-gray-200">${trip.bookingId || ''}</td>
-        <td class="border border-gray-200">${trip.customerName || ''}</td>
-        <td class="border border-gray-200">${trip.date || ''}</td>
-        <td class="border border-gray-200">${totalAmount.toFixed(2)}</td>
-        <td class="border border-gray-200"><input type="number" class="editable-input" value="${paidAmount.toFixed(2)}" id="paid-${key}" min="0" max="${totalAmount}" step="0.01" aria-label="Paid Amount"></td>
-        <td class="border border-gray-200"><span id="balance-${key}">${balanceAmount.toFixed(2)}</span></td>
-        <td class="border border-gray-200">
-          <select class="status-select" id="status-${key}" aria-label="Payment Status">
-            <option ${trip.paymentStatus === "Paid" ? "selected" : ""}>Paid</option>
-            <option ${trip.paymentStatus === "Partially Paid" ? "selected" : ""}>Partially Paid</option>
-            <option ${trip.paymentStatus === "Not Paid" ? "selected" : ""}>Not Paid</option>
-          </select>
-        </td>
-        <td class="border border-gray-200">${trip.driverName || ''}</td>
-        <td class="border border-gray-200">${trip.vehicleModel || ''}</td>
-        <td class="border border-gray-200">
-          <button class="btn bg-indigo-600 text-white px-3 py-1 rounded-md hover:bg-indigo-700" onclick="updatePayment('${key}', ${totalAmount})" title="Update Payment" aria-label="Update Payment">
-            <i class="fas fa-save"></i>
-          </button>
-        </td>
+    // Modal logic
+    function showTripModal(trip) {
+      const modalBg = document.getElementById("tripModalBg");
+      const modalTable = document.getElementById("tripModalTable");
+      modalTable.innerHTML = `
+        <tr><td><b>Trip ID</b></td><td>${trip.bookingId || ""}</td></tr>
+        <tr><td><b>Date</b></td><td>${formatDate(trip.date) || ""}</td></tr>
+        <tr><td><b>Duty</b></td><td>${trip.duty || ""}</td></tr>
+        <tr><td><b>Reference</b></td><td>${trip.reference || ""}</td></tr>
+        <tr><td><b>Pickup</b></td><td>${trip.pickupLocation || ""}</td></tr>
+        <tr><td><b>Drop</b></td><td>${trip.dropLocation || ""}</td></tr>
+        <tr><td><b>Customer</b></td><td>${trip.customerName || ""} (${trip.customerNumber || ""})</td></tr>
+        <tr><td><b>Driver</b></td><td>${trip.driverName || ""} (${trip.driverNumber || ""})</td></tr>
+        <tr><td><b>Vehicle</b></td><td>${trip.vehicleModel || ""} (${trip.vehicleNumber || ""})</td></tr>
+        <tr><td><b>Start</b></td><td>${trip.startTime || ""}</td></tr>
+        <tr><td><b>End</b></td><td>${trip.endTime || ""}</td></tr>
+        <tr><td><b>Duration</b></td><td>${trip.duration || ""}</td></tr>
+        <tr><td><b>Total KM</b></td><td>${trip.totalKm || ""}</td></tr>
+        <tr><td><b>Total Amount</b></td><td>₹${trip.totalAmount || ""}</td></tr>
+        <tr><td><b>Payment</b></td><td>${trip.paymentStatus || ""}</td></tr>
+        <tr><td><b>Paid</b></td><td>₹${trip.paidAmount || ""}</td></tr>
+        <tr><td><b>Balance</b></td><td>₹${trip.balanceAmount || ""}</td></tr>
       `;
-
-      paymentTableBody.appendChild(row);
-
-      // Auto-update balance on paid input change
-      const paidInput = row.querySelector(`#paid-${key}`);
-      paidInput.addEventListener("input", () => {
-        let val = paidInput.value;
-        if (val === '') {
-          document.getElementById(`balance-${key}`).innerText = totalAmount.toFixed(2);
-          return;
-        }
-        val = parseFloat(val);
-        if (isNaN(val) || val < 0) val = 0;
-        if (val > totalAmount) val = totalAmount;
-        document.getElementById(`balance-${key}`).innerText = (totalAmount - val).toFixed(2);
-      });
-
-      paidInput.addEventListener("blur", () => {
-        let val = parseFloat(paidInput.value);
-        if (isNaN(val) || val < 0) val = 0;
-        if (val > totalAmount) val = totalAmount;
-        paidInput.value = val.toFixed(2);
-        document.getElementById(`balance-${key}`).innerText = (totalAmount - val).toFixed(2);
-      });
+      modalBg.classList.add("active");
     }
-
-    function loadPayments() {
-      const tripRef = ref(db, "trips");
-      onValue(tripRef, (snapshot) => {
-        allTrips = [];
-        if (!snapshot.exists()) {
-          paymentTableBody.innerHTML = "<tr><td colspan='11' class='text-center py-4 text-gray-600'>No payment data found.</td></tr>";
-          return;
-        }
-
-        snapshot.forEach(childSnap => {
-          allTrips.push({ trip: childSnap.val(), key: childSnap.key });
-        });
-
-        populateDriverFilter();
-        renderTable();
-      });
-    }
-
-    window.updatePayment = (key, totalAmount) => {
-      const paid = parseFloat(document.getElementById(`paid-${key}`).value) || 0;
-      const status = document.getElementById(`status-${key}`).value;
-      const balance = totalAmount - paid;
-
-      update(ref(db, `trips/${key}`), {
-        paidAmount: paid,
-        balanceAmount: balance,
-        paymentStatus: status
-      })
-      .then(() => alert("Payment updated successfully!"))
-      .catch(err => alert("Update failed: " + err));
+    document.getElementById("modalCloseBtn").onclick = function() {
+      document.getElementById("tripModalBg").classList.remove("active");
+    };
+    document.getElementById("tripModalBg").onclick = function(e) {
+      if (e.target === this) this.classList.remove("active");
     };
 
-    // Bulk Delete functionality
-    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-    bulkDeleteBtn.disabled = true;
-
-    document.getElementById('selectAll').addEventListener('change', function() {
-      const checked = this.checked;
-      document.querySelectorAll('.rowCheckbox').forEach(cb => cb.checked = checked);
-      toggleBulkDeleteBtn();
-    });
-
-    paymentTableBody.addEventListener('change', e => {
-      if (e.target.classList.contains('rowCheckbox')) toggleBulkDeleteBtn();
-    });
-
-    function toggleBulkDeleteBtn() {
-      const anyChecked = Array.from(document.querySelectorAll('.rowCheckbox')).some(cb => cb.checked);
-      bulkDeleteBtn.disabled = !anyChecked;
-    }
-
-    bulkDeleteBtn.addEventListener('click', () => {
-      if (!confirm("Are you sure you want to delete selected payments?")) return;
-
-      const checkedBoxes = Array.from(document.querySelectorAll('.rowCheckbox:checked'));
-      if (checkedBoxes.length === 0) return alert("No rows selected.");
-
-      Promise.all(checkedBoxes.map(cb => remove(ref(db, `trips/${cb.dataset.key}`))))
-        .then(() => alert(`${checkedBoxes.length} payments deleted successfully.`))
-        .catch(err => alert("Error deleting payments: " + err));
-    });
-
-    // Export to Excel
-    document.getElementById('exportExcelBtn').addEventListener('click', () => {
-      const XLSX = window.XLSX;
-      const startDate = document.getElementById("startDate").value;
-      const endDate = document.getElementById("endDate").value;
-      const driverFilter = document.getElementById("driverFilter").value;
-      const statusFilter = document.getElementById("statusFilter").value;
-
-      const filtered = allTrips.filter(({ trip }) => {
-        if (startDate && trip.date < startDate) return false;
-        if (endDate && trip.date > endDate) return false;
-        if (driverFilter && trip.driverName !== driverFilter) return false;
-        if (statusFilter && trip.paymentStatus !== statusFilter) return false;
-        return true;
-      });
-
-      if (filtered.length === 0) return alert("No data to export.");
-
-      const data = filtered.map(({ trip }) => ({
-        'Booking ID': trip.bookingId,
-        'Customer': trip.customerName,
-        'Date': trip.date,
-        'Total Amount (₹)': trip.totalAmount,
-        'Paid Amount (₹)': trip.paidAmount,
-        'Balance Amount (₹)': ((trip.totalAmount || 0) - (trip.paidAmount || 0)).toFixed(2),
-        'Payment Status': trip.paymentStatus,
-        'Driver': trip.driverName,
-        'Vehicle': trip.vehicleModel
-      }));
-
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(data);
-      XLSX.utils.book_append_sheet(wb, ws, 'Payments');
-      XLSX.writeFile(wb, 'NST_Payment_Summary.xlsx');
-    });
-
-    // Export to PDF
-    document.getElementById('exportPdfBtn').addEventListener('click', () => {
-      const { jsPDF } = window.jspdf;
-      const startDate = document.getElementById("startDate").value;
-      const endDate = document.getElementById("endDate").value;
-      const driverFilter = document.getElementById("driverFilter").value;
-      const statusFilter = document.getElementById("statusFilter").value;
-
-      const filtered = allTrips.filter(({ trip }) => {
-        if (startDate && trip.date < startDate) return false;
-        if (endDate && trip.date > endDate) return false;
-        if (driverFilter && trip.driverName !== driverFilter) return false;
-        if (statusFilter && trip.paymentStatus !== statusFilter) return false;
-        return true;
-      });
-
-      if (filtered.length === 0) return alert("No data to export.");
-
-      const doc = new jsPDF();
-      doc.text("NST Travels Payment Summary", 14, 15);
-
-      const rows = filtered.map(({ trip }) => ([
-        trip.bookingId,
-        trip.customerName,
-        trip.date,
-        (trip.totalAmount || 0).toFixed(2),
-        (trip.paidAmount || 0).toFixed(2),
-        ((trip.totalAmount || 0) - (trip.paidAmount || 0)).toFixed(2),
-        trip.paymentStatus,
-        trip.driverName,
-        trip.vehicleModel
-      ]));
-
-      doc.autoTable({
-        head: [['Booking ID', 'Customer', 'Date', 'Total (₹)', 'Paid (₹)', 'Balance (₹)', 'Status', 'Driver', 'Vehicle']],
-        body: rows,
-        startY: 20,
-        styles: { fontSize: 8 }
-      });
-
-      doc.save("NST_Payment_Summary.pdf");
-    });
-
-    // Filters trigger re-render
-    ['startDate', 'endDate', 'driverFilter', 'statusFilter'].forEach(id => {
-      document.getElementById(id).addEventListener('change', () => {
-        document.getElementById('selectAll').checked = false;
-        bulkDeleteBtn.disabled = true;
-        renderTable();
-      });
-    });
-
-    loadPayments();
+    window.addEventListener("DOMContentLoaded", loadPaymentSummary);
   </script>
 </body>
 </html>
