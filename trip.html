@@ -272,7 +272,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <label for="parking" class="form-label block mb-1">Parking (₹)</label>
-            <input type="number" class= "input-field w-full" id="parking" min="0" aria-label="Parking" />
+            <input type="number" class="input-field w-full" id="parking" min="0" aria-label="Parking" />
           </div>
           <div>
             <label for="toll" class="form-label block mb-1">Toll (₹)</label>
@@ -453,9 +453,10 @@
       }
     }
 
-    function timeToMinutes(t) {
-      const [h, m] = t.split(":").map(Number);
-      return h * 60 + m;
+    function timeToMinutes(timeStr) {
+      // Parse time string in format "HH:MM" (24-hour format from input type="time")
+      const [hours, minutes] = timeStr.split(":").map(Number);
+      return hours * 60 + minutes;
     }
 
     async function tripIdExists(tripId) {
@@ -783,10 +784,20 @@
       
       // Only calculate duration if both start and end times are selected
       if (start && end) {
-        let sm = timeToMinutes(start);
-        let em = timeToMinutes(end);
-        if (em < sm) em += 24 * 60;
-        durationInput.value = ((em - sm) / 60).toFixed(2);
+        let startMinutes = timeToMinutes(start);
+        let endMinutes = timeToMinutes(end);
+        
+        // Handle case where end time is on the next day (e.g., 9:30 PM to 1:30 AM)
+        if (endMinutes < startMinutes) {
+          endMinutes += 24 * 60; // Add 24 hours in minutes
+        }
+        
+        const durationMinutes = endMinutes - startMinutes;
+        const hours = Math.floor(durationMinutes / 60);
+        const minutes = durationMinutes % 60;
+        
+        // Format as "X hours Y minutes" or just "X hours" if minutes are 0
+        durationInput.value = minutes > 0 ? `${hours} hours ${minutes} minutes` : `${hours} hours`;
         durationInput.readOnly = true; // Make readonly when calculated
       } else {
         // Allow manual input when either start or end time is not selected
